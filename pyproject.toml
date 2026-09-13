@@ -1,0 +1,14 @@
+[project]
+name = "meridian"
+version = "0.0.0"
+description = "AIVC intake triage case study for the fictional Meridian Advisory"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = []
+
+[tool.uv]
+package = false
+
+# Bound workspace discovery here; the enclosing ~/life project is independent.
+[tool.uv.workspace]
+members = []
