@@ -27,6 +27,9 @@ EVALUATION.md before making implementation decisions.
   1.5 checkpoint. Do not rerender, rewrite, relabel, or otherwise tune benchmark
   inputs after classifier work begins except to correct a demonstrable benchmark
   defect, and record any such correction explicitly.
+- `eval/results/initial.json` is the preserved first untuned classifier result from
+  commit `7fb00bbaab71486edb1cfa530f45f02659fe78b4`. Do not overwrite, rewrite, or
+  retroactively reinterpret it as a tuned/final run.
 - Synthetic wording must be rendered from form + seed only. The rendering model
   must never receive expected labels or rationales.
 - The classifier sees only submitted fields and semantic config, never answer keys,
@@ -34,8 +37,13 @@ EVALUATION.md before making implementation decisions.
   validated assessment + routing config.
 - Preserve raw/reproducible evaluation evidence. Do not claim a stress-weighted
   synthetic benchmark estimates production reliability or production case mix.
-- Prioritize a functioning prototype and reproducible results. UI, live scenario
-  generation, and interview presentation are optional after the deliverable works.
+- The first untuned result exposed three unsafe automatic routes and two additional
+  complexity mismatches. Treat those as evidence to analyze, not as permission to
+  chase a perfect synthetic score. Any further model/prompt/policy experiment must
+  be explicitly authorized and preserved as a separate result.
+- Prioritize a functioning prototype, honest evidence, and evaluator-facing clarity.
+  UI, live scenario generation, and further model tuning are optional and should be
+  added only when their evaluator-visible value exceeds their complexity/time cost.
 - Keep source PDF, raw conversations, credentials, and scratch runs out of Git.
 - Do not broaden scope or introduce architectural machinery unless the strategy
   thread has decided it earns its place through evaluator-visible behavior.
@@ -43,9 +51,8 @@ EVALUATION.md before making implementation decisions.
   checkpoints. Do not commit credentials or modify the enclosing parent repository.
 - The GitHub repository is `keeganpoppen/aivc-case-study`.
 
-Current phase: the evaluation contract, semantic answer keys, and 30 rendered
-enquiry descriptions are frozen before classifier implementation. Phase 1.5 commit
-`93ced9e13b5ebc521ba1ad6c52816d415d0a0b5a` is the benchmark checkpoint.
-Next: implement the minimal structured classifier, deterministic router, and
-reproducible evaluator against the frozen benchmark; inspect the first untuned
-results before making any classifier/prompt/model changes.
+Current phase: the functioning prototype and first untuned evaluation are complete.
+The benchmark remains frozen. Default next work is submission packaging and
+interview/demo preparation, not benchmark-score optimization. If further experiments
+are authorized, preserve them separately from the initial result and compare them
+honestly against the same frozen benchmark.
