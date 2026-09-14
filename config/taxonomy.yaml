@@ -9,8 +9,11 @@ classification_policy:
     requested outcome clearly dominates. If no defensible primary owner exists,
     disposition is ambiguous and the enquiry is reviewed.
   out_of_scope: >-
-    If the request is sufficiently understood but no configured service line owns
-    the requested work, disposition is out_of_scope rather than forcing the nearest label.
+    Use out_of_scope only when the request is sufficiently understood and is clearly
+    excluded by configured eligibility policy or clearly falls outside every offered
+    service line. Do not infer exclusion from weak evidence. If scope eligibility is
+    uncertain because relevant information is missing or contradictory, send the
+    enquiry to review rather than forcing an out_of_scope conclusion.
   insufficient_information: >-
     If missing or contradictory information makes automatic routing unsafe,
     disposition is insufficient_information. Preserve partial semantic conclusions
@@ -22,6 +25,8 @@ eligibility:
     notes: >-
       Empty in the baseline scenario. This is configuration rather than prompt-only
       prose so a firm-level scope change can be demonstrated without code changes.
+      Scope classification is conservative: configured exclusions can move an
+      otherwise routeable enquiry to human review, but v0 never auto-rejects a lead.
 
 complexity:
   global:
