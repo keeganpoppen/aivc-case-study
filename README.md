@@ -1,51 +1,58 @@
-# Meridian
+# Meridian — Intake Triage Prototype
 
-AIVC intake triage case study for **Meridian Advisory**, a fictional professional
-services firm. The target is a small classifier with explicit abstention and a
-separate, configurable router.
+A small prototype for automating intake triage at **Meridian Advisory**, a
+fictional professional-services firm. The system classifies an inbound enquiry,
+estimates its complexity, and either routes it according to explicit business
+policy or abstains for human review.
 
-**Status:** specification and environment checkpoint. The classifier, dataset, and
-evaluation runner have not been implemented. There are no performance results yet.
+The implementation is intentionally small. This problem does not need an agentic
+workflow: one structured semantic assessment followed by deterministic policy is
+easier to reason about, cheaper to operate, and clearer to evaluate.
 
-The agreed design is recorded in [SPEC.md](SPEC.md), including:
+## Design
 
-- [Meridian's six practices, complexity rubric, and lead-routing policy](SPEC.md#2-accepted-operating-assumptions).
-- [The structured assessment, abstention rules, and separation of classification from routing](SPEC.md#3-accepted-system-contract).
-- [The synthetic evaluation plan, metrics, and cost assumptions](SPEC.md#4-evaluation-commitments).
-- [Scope, build order, and decisions still to make](SPEC.md#5-scope-and-work-sequence).
+The prototype separates two concerns that change for different reasons:
 
-## Work here
+1. **What is this enquiry?** A model interprets the submitted description and
+   metadata against Meridian's configured service taxonomy and complexity rubric.
+2. **What should the firm do with it?** Ordinary code applies configurable routing
+   and escalation policy to the resulting assessment.
 
-The current AIVC continuation task owns design decisions. [SPEC.md](SPEC.md)
-records the accepted design and the next work items. [AGENTS.md](AGENTS.md) keeps
-future coding sessions aligned with that agreement.
+That separation lets Meridian change team ownership without reclassifying old
+enquiries, or change the taxonomy without baking employee names into a prompt.
+Ambiguous, insufficient, or unsupported requests are not forced into a category;
+they are sent to human review.
 
-From a checkout of this repository:
+## Evaluation approach
+
+The benchmark is defined before classifier implementation. Each synthetic case
+starts from authored latent facts and an independent answer key; realistic customer
+wording can then be rendered from those facts without giving the renderer the
+expected label. This keeps the evaluation from becoming a test written after the
+model's behavior is known.
+
+The evaluation will report more than raw accuracy. In particular, it measures the
+tradeoff between **automation coverage** and **selective routing accuracy**: a system
+that abstains on every hard case is safe but useless, while one that routes every
+case may create expensive errors.
+
+The brief implies roughly 8–12 analyst-minutes per enquiry, with 9.6 minutes at the
+midpoint of 50 enquiries/week. The evaluator therefore also expresses performance
+under a configurable cost of an incorrect automatic route rather than assuming that
+all mistakes and all human reviews are equally expensive.
+
+## Repository layout
+
+The final repository will contain the runnable prototype, frozen synthetic cases,
+configuration for Meridian's taxonomy and routing policy, reproducible evaluation
+results, and brief production/fallback notes. `SPEC.md` records the detailed design
+assumptions used to build the prototype.
+
+## Running
 
 ```sh
 uv sync --locked
-uv run python --version
-git status --short --branch
 ```
 
-Python 3.13 and uv are the chosen local tools. The project currently needs no
-third-party Python dependencies and makes no model API calls. We will add only
-the dependencies the implementation uses and record them in `uv.lock`.
-
-## Build order
-
-1. Define the evaluation contract and author roughly 30 latent cases.
-2. Review the submitted wording against those facts and freeze the answer key.
-3. Build validation, structured classification, abstention, and deterministic routing.
-4. Run evaluation, inspect errors, and change only what those errors justify.
-5. Include reproducible results, run instructions, a small architecture diagram,
-   and brief production/fallback notes in this README.
-
-GitHub is for durable checkpoints and the eventual submission:
-[keeganpoppen/aivc-case-study](https://github.com/keeganpoppen/aivc-case-study)
-is private. We publish checkpoints through the GitHub connector and synchronize
-the local Git history with the resulting commits. Terminal Git authentication is
-not required for that workflow. The local checkout is `/Users/elkeegano/life/aivc`.
-
-The original brief and discussion are retained locally under `.local/reference/`,
-which Git ignores. They are not part of the submission.
+Runnable classification and evaluation commands will be documented here alongside
+the implementation that they exercise.
