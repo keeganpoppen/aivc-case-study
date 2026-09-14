@@ -1,0 +1,644 @@
+version: 1
+
+notes:
+  - These latent cases and semantic answer keys are authored before classifier implementation.
+  - Natural-language descriptions are intentionally absent at this stage.
+  - A renderer may receive only form + seed, never expected + rationale.
+  - Rendered descriptions must be reviewed for fidelity and then frozen before classifier tuning.
+  - Cohort frequencies are stress-weighted and do not estimate Meridian's production case mix.
+
+cases:
+  - id: S01
+    cohort: straightforward
+    form:
+      industry: B2B software
+      company_size: small
+      urgency: normal
+    seed:
+      requested_outcome: Compare two adjacent markets and recommend which one the company should enter.
+      facts:
+        - The client wants a bounded strategic assessment and recommendation.
+        - No implementation, system build, or operating redesign is requested.
+        - One leadership workshop is expected at the end.
+      rendering_style: concise executive; uses ordinary business language
+    expected:
+      disposition: clear
+      service_line: strategy_transformation
+      complexity: simple
+      alternative_service_lines: []
+    rationale: The requested product is a focused strategic choice with one bounded deliverable.
+    tags: [bounded, strategy, small_company]
+
+  - id: S02
+    cohort: straightforward
+    form:
+      industry: specialty retail
+      company_size: mid_market
+      urgency: normal
+    seed:
+      requested_outcome: Produce a 12-month growth plan covering channel opportunities and operating priorities.
+      facts:
+        - The work requires commercial analysis and input from several functional leaders.
+        - The desired deliverable is a growth roadmap, not implementation.
+        - Scope remains within one company and one planning horizon.
+      rendering_style: moderately detailed; commercially oriented
+    expected:
+      disposition: clear
+      service_line: strategy_transformation
+      complexity: moderate
+      alternative_service_lines: []
+    rationale: Strategy is primary; several stakeholders and analyses make it moderate rather than simple.
+    tags: [strategy, multi_stakeholder]
+
+  - id: S03
+    cohort: straightforward
+    form:
+      industry: industrial manufacturing
+      company_size: enterprise
+      urgency: normal
+    seed:
+      requested_outcome: Define a target operating model and transformation roadmap across regions and business units.
+      facts:
+        - The company operates globally with several semi-independent business units.
+        - Leadership wants governance, organizational design, sequencing, and transformation priorities.
+        - Execution will require significant organizational change after the roadmap is approved.
+      rendering_style: formal enterprise request; several clauses
+    expected:
+      disposition: clear
+      service_line: strategy_transformation
+      complexity: complex
+      alternative_service_lines: [operations_process]
+    rationale: The primary outcome is enterprise transformation design; global multi-unit scope makes it complex.
+    tags: [enterprise, strategy, change_management]
+
+  - id: S04
+    cohort: straightforward
+    form:
+      industry: ecommerce
+      company_size: small
+      urgency: normal
+    seed:
+      requested_outcome: Map the returns workflow for one warehouse and reduce unnecessary handoffs.
+      facts:
+        - One warehouse is in scope.
+        - The client wants process mapping and a short list of operational improvements.
+        - No new software implementation is requested.
+      rendering_style: terse operations-manager note
+    expected:
+      disposition: clear
+      service_line: operations_process
+      complexity: simple
+      alternative_service_lines: []
+    rationale: A single bounded workflow is the object of improvement.
+    tags: [operations, single_site, bounded]
+
+  - id: S05
+    cohort: straightforward
+    form:
+      industry: logistics
+      company_size: mid_market
+      urgency: normal
+    seed:
+      requested_outcome: Redesign dispatch and picking workflows across two facilities.
+      facts:
+        - Existing warehouse software constrains some process choices but is not being replaced.
+        - Operations leaders at two facilities must agree on the future workflow.
+        - The client wants process redesign plus implementation recommendations.
+      rendering_style: pragmatic; mentions systems incidentally
+    expected:
+      disposition: clear
+      service_line: operations_process
+      complexity: moderate
+      alternative_service_lines: [technology_systems]
+    rationale: The business process is primary; two sites and systems dependencies create moderate complexity.
+    tags: [operations, incidental_technology, multi_site]
+
+  - id: S06
+    cohort: straightforward
+    form:
+      industry: hospitality
+      company_size: enterprise
+      urgency: normal
+    seed:
+      requested_outcome: Standardize customer-service operations across roughly 80 locations.
+      facts:
+        - Locations currently follow inconsistent processes and staffing models.
+        - The future state requires training, adoption, and operational governance.
+        - Several regional leaders and frontline roles are affected.
+      rendering_style: executive sponsor; change-management language
+    expected:
+      disposition: clear
+      service_line: operations_process
+      complexity: complex
+      alternative_service_lines: [strategy_transformation]
+    rationale: The requested outcome is operating-process standardization at large scale with substantial change management.
+    tags: [operations, enterprise, change_management, multi_site]
+
+  - id: S07
+    cohort: straightforward
+    form:
+      industry: consumer packaged goods
+      company_size: enterprise
+      urgency: normal
+    seed:
+      requested_outcome: Build a bounded executive KPI dashboard.
+      facts:
+        - Metrics are already defined and agreed.
+        - All required data is in one existing warehouse with clean tables.
+        - The deliverable is one dashboard for a small executive audience.
+      rendering_style: short and specific
+    expected:
+      disposition: clear
+      service_line: data_ai
+      complexity: simple
+      alternative_service_lines: []
+    rationale: Large company size does not make a technically bounded, well-specified analytics deliverable complex.
+    tags: [data_ai, enterprise_but_simple, bounded]
+
+  - id: S08
+    cohort: straightforward
+    form:
+      industry: insurance
+      company_size: mid_market
+      urgency: normal
+    seed:
+      requested_outcome: Prototype a churn-propensity model using CRM and billing data.
+      facts:
+        - Two existing data sources must be joined and assessed for quality.
+        - The client wants a prototype and evaluation, not an enterprise deployment.
+        - Business stakeholders must agree on a useful target definition.
+      rendering_style: product-analytics request; moderately technical
+    expected:
+      disposition: clear
+      service_line: data_ai
+      complexity: moderate
+      alternative_service_lines: []
+    rationale: A bounded ML prototype with multiple sources and discovery is moderate Data & AI work.
+    tags: [data_ai, ml, multiple_sources]
+
+  - id: S09
+    cohort: straightforward
+    form:
+      industry: consumer packaged goods
+      company_size: enterprise
+      urgency: normal
+    seed:
+      requested_outcome: Establish enterprise data governance, modernize the data platform, and enable ML across regions.
+      facts:
+        - Several regional data estates and business domains are in scope.
+        - Governance, platform architecture, migration sequencing, and ML enablement are all requested.
+        - The work affects many data owners and engineering teams.
+      rendering_style: polished enterprise RFP excerpt
+    expected:
+      disposition: clear
+      service_line: data_ai
+      complexity: complex
+      alternative_service_lines: [technology_systems]
+    rationale: The primary outcome is enterprise data capability across regions and multiple workstreams.
+    tags: [data_ai, enterprise, platform, governance]
+
+  - id: S10
+    cohort: straightforward
+    form:
+      industry: nonprofit education
+      company_size: small
+      urgency: urgent
+    seed:
+      requested_outcome: Configure an off-the-shelf CRM and import roughly 5,000 contacts before a campaign.
+      facts:
+        - The selected SaaS product is already purchased.
+        - No custom integrations are required.
+        - Fields and import source are known.
+        - The deadline is soon, which is why the client marked the request urgent.
+      rendering_style: anxious but concrete; uses ASAP language
+    expected:
+      disposition: clear
+      service_line: technology_systems
+      complexity: simple
+      alternative_service_lines: []
+    rationale: Urgency does not make a bounded configuration and migration technically complex.
+    tags: [technology, urgent_but_simple, small_company]
+
+  - id: S11
+    cohort: straightforward
+    form:
+      industry: medical devices
+      company_size: mid_market
+      urgency: normal
+    seed:
+      requested_outcome: Migrate to a new CRM and integrate it with billing and customer support for one business unit.
+      facts:
+        - Historical customer data must be migrated.
+        - Two downstream integrations are required.
+        - Only one business unit is in scope.
+        - Business processes are largely staying the same.
+      rendering_style: IT director; precise but not deeply technical
+    expected:
+      disposition: clear
+      service_line: technology_systems
+      complexity: moderate
+      alternative_service_lines: []
+    rationale: System delivery is primary; migration plus two integrations creates moderate scope.
+    tags: [technology, migration, integrations]
+
+  - id: S12
+    cohort: straightforward
+    form:
+      industry: industrial manufacturing
+      company_size: enterprise
+      urgency: normal
+    seed:
+      requested_outcome: Consolidate ERP systems across acquired businesses and plants onto one global platform.
+      facts:
+        - Several acquired entities use different ERP products and data models.
+        - Plant systems, finance integrations, and historical data must be migrated.
+        - Rollout spans countries and business units.
+      rendering_style: enterprise CIO; compressed list of dependencies
+    expected:
+      disposition: clear
+      service_line: technology_systems
+      complexity: complex
+      alternative_service_lines: [finance_transactions, operations_process]
+    rationale: Global multi-system migration and integration are complex Technology & Systems work.
+    tags: [technology, enterprise, erp, post_acquisition]
+
+  - id: S13
+    cohort: straightforward
+    form:
+      industry: healthcare clinic
+      company_size: small
+      urgency: normal
+    seed:
+      requested_outcome: Perform a bounded HIPAA security-risk assessment.
+      facts:
+        - The client wants an assessment and prioritized findings only.
+        - No remediation program or system implementation is in scope.
+        - The environment is small and well documented.
+      rendering_style: compliance manager; concise
+    expected:
+      disposition: clear
+      service_line: risk_compliance
+      complexity: simple
+      alternative_service_lines: []
+    rationale: A regulated industry does not make a focused assessment complex by itself.
+    tags: [risk, regulated_but_simple, healthcare]
+
+  - id: S14
+    cohort: straightforward
+    form:
+      industry: fintech
+      company_size: mid_market
+      urgency: normal
+    seed:
+      requested_outcome: Prepare for SOC 2 and close readiness gaps across engineering, security, and operations.
+      facts:
+        - The client needs control mapping, evidence readiness, and remediation planning.
+        - Several functions own different controls.
+        - The engagement remains focused on one assurance framework.
+      rendering_style: startup COO; mixes business and compliance terminology
+    expected:
+      disposition: clear
+      service_line: risk_compliance
+      complexity: moderate
+      alternative_service_lines: []
+    rationale: Cross-functional readiness and remediation are moderate Risk & Compliance work.
+    tags: [risk, compliance, multi_function]
+
+  - id: S15
+    cohort: straightforward
+    form:
+      industry: banking
+      company_size: enterprise
+      urgency: normal
+    seed:
+      requested_outcome: Remediate privacy and control gaps across multiple jurisdictions and business units.
+      facts:
+        - Several regulators and regional privacy regimes are relevant.
+        - Control changes affect technology, operations, and governance teams.
+        - Executive reporting and a multi-wave remediation plan are required.
+      rendering_style: formal risk-office request
+    expected:
+      disposition: clear
+      service_line: risk_compliance
+      complexity: complex
+      alternative_service_lines: []
+    rationale: Multi-jurisdiction enterprise remediation with material control dependencies is complex.
+    tags: [risk, enterprise, multi_jurisdiction]
+
+  - id: S16
+    cohort: straightforward
+    form:
+      industry: developer tools software
+      company_size: small
+      urgency: normal
+    seed:
+      requested_outcome: Build a 24-month operating and financial model for an upcoming fundraising process.
+      facts:
+        - Assumptions and historical financials are available.
+        - One integrated model and a short assumptions summary are requested.
+        - No transaction diligence or finance-system implementation is requested.
+      rendering_style: founder-written; informal but specific
+    expected:
+      disposition: clear
+      service_line: finance_transactions
+      complexity: simple
+      alternative_service_lines: []
+    rationale: One bounded financial model is simple Finance & Transactions work.
+    tags: [finance, fundraising, bounded]
+
+  - id: S17
+    cohort: straightforward
+    form:
+      industry: wholesale distribution
+      company_size: mid_market
+      urgency: normal
+    seed:
+      requested_outcome: Redesign FP&A forecasting and monthly planning across several functions.
+      facts:
+        - Finance, sales, and operations currently use inconsistent assumptions.
+        - The client wants a new planning process and model structure.
+        - Core finance systems will remain in place.
+      rendering_style: CFO request; planning terminology
+    expected:
+      disposition: clear
+      service_line: finance_transactions
+      complexity: moderate
+      alternative_service_lines: [operations_process]
+    rationale: FP&A is primary, with cross-functional process redesign creating moderate complexity.
+    tags: [finance, fpa, multi_function]
+
+  - id: S18
+    cohort: straightforward
+    form:
+      industry: industrial services
+      company_size: enterprise
+      urgency: urgent
+    seed:
+      requested_outcome: Support an acquisition with multi-country diligence, valuation, and carve-out financial planning.
+      facts:
+        - Several legal entities and countries are involved.
+        - The buyer needs diligence, valuation work, and Day-1 / carve-out finance planning.
+        - Closing timetable is compressed.
+      rendering_style: deal-team note; terse and time-pressured
+    expected:
+      disposition: clear
+      service_line: finance_transactions
+      complexity: complex
+      alternative_service_lines: [strategy_transformation]
+    rationale: Multiple transaction workstreams across countries make this complex Finance & Transactions work; urgency is incidental to complexity.
+    tags: [finance, transaction, multi_country, urgent]
+
+  - id: H01
+    cohort: hard_routeable
+    form:
+      industry: healthcare services
+      company_size: mid_market
+      urgency: normal
+    seed:
+      requested_outcome: Decide where the company should invest in AI and produce a prioritized transformation roadmap.
+      facts:
+        - Executives call the project an AI strategy.
+        - They want use-case prioritization, investment sequencing, operating-model implications, and a roadmap.
+        - They explicitly do not want models or a data platform built in this phase.
+      rendering_style: executive; repeats the phrase AI strategy several times
+    expected:
+      disposition: clear
+      service_line: strategy_transformation
+      complexity: moderate
+      alternative_service_lines: [data_ai]
+    rationale: AI is the subject matter, but the requested product is strategic prioritization and a transformation roadmap.
+    tags: [boundary, ai_keyword, strategy_vs_data]
+
+  - id: H02
+    cohort: hard_routeable
+    form:
+      industry: insurance
+      company_size: enterprise
+      urgency: normal
+    seed:
+      requested_outcome: Reduce claims cycle time and adjuster rework by redesigning the claims workflow.
+      facts:
+        - Current claims handling contains substantial manual review and rekeying.
+        - AI document extraction is proposed as one component of the future workflow.
+        - The client is not asking for a general AI platform or standalone model product.
+        - The target operating process and handoffs are the central deliverable.
+      rendering_style: rambling nontechnical operations executive; enthusiastic about AI
+    expected:
+      disposition: clear
+      service_line: operations_process
+      complexity: moderate
+      alternative_service_lines: [data_ai, technology_systems]
+    rationale: AI and systems are implementation mechanisms; the primary requested outcome is a redesigned claims process.
+    tags: [boundary, operations_vs_data, ai_as_means]
+
+  - id: H03
+    cohort: hard_routeable
+    form:
+      industry: industrial manufacturing
+      company_size: mid_market
+      urgency: normal
+    seed:
+      requested_outcome: Build a predictive-maintenance model from sensor and maintenance history to reduce downtime.
+      facts:
+        - Plant downtime is the business motivation.
+        - The concrete deliverable is a predictive model and evaluation pipeline.
+        - Existing maintenance workflows may consume predictions later but are not being redesigned now.
+      rendering_style: plant leader; operations-heavy vocabulary around a technical ask
+    expected:
+      disposition: clear
+      service_line: data_ai
+      complexity: moderate
+      alternative_service_lines: [operations_process]
+    rationale: The business benefit is operational, but the requested product is explicitly a model capability.
+    tags: [boundary, data_vs_operations, ml]
+
+  - id: H04
+    cohort: hard_routeable
+    form:
+      industry: specialty manufacturing
+      company_size: small
+      urgency: normal
+    seed:
+      requested_outcome: Replace and integrate accounting/ERP, CRM, and warehouse systems with a major data migration.
+      facts:
+        - The company has fewer than 100 employees.
+        - Three core systems are being replaced.
+        - Historical finance, customer, inventory, and order data must be migrated.
+        - Several integrations and cutover dependencies exist.
+      rendering_style: founder/COO; apologizes for being a small company and calls the stack a mess
+    expected:
+      disposition: clear
+      service_line: technology_systems
+      complexity: complex
+      alternative_service_lines: [finance_transactions, operations_process]
+    rationale: Small company size does not neutralize a multi-system replacement, migration, and integration program.
+    tags: [technology, small_but_complex, multiple_systems]
+
+  - id: H05
+    cohort: hard_routeable
+    form:
+      industry: banking
+      company_size: enterprise
+      urgency: normal
+    seed:
+      requested_outcome: Establish governance for generative-AI use across the bank.
+      facts:
+        - The client wants approval policy, model-risk standards, privacy controls, monitoring requirements, and audit evidence.
+        - They are not asking Meridian to build an AI product.
+        - Several regulated functions must comply with the framework.
+      rendering_style: risk leader; repeatedly says GenAI and model
+    expected:
+      disposition: clear
+      service_line: risk_compliance
+      complexity: complex
+      alternative_service_lines: [data_ai]
+    rationale: The requested outcome is governance and control, not model capability; enterprise regulated scope makes it complex.
+    tags: [boundary, ai_keyword, risk_vs_data, enterprise]
+
+  - id: H06
+    cohort: hard_routeable
+    form:
+      industry: private equity
+      company_size: mid_market
+      urgency: urgent
+    seed:
+      requested_outcome: Perform acquisition diligence, build a synergy model, and prepare the Day-1 finance plan.
+      facts:
+        - A systems inventory is requested as one diligence input.
+        - No system migration or integration implementation is in scope during this phase.
+        - The work spans diligence, valuation assumptions, synergies, and Day-1 finance readiness.
+      rendering_style: compressed deal-team email pasted into a form
+    expected:
+      disposition: clear
+      service_line: finance_transactions
+      complexity: complex
+      alternative_service_lines: [strategy_transformation, technology_systems]
+    rationale: Transaction and finance outcomes dominate; systems are an input rather than the requested implementation.
+    tags: [boundary, finance_vs_technology, transaction]
+
+  - id: A01
+    cohort: ambiguous
+    form:
+      industry: insurance
+      company_size: enterprise
+      urgency: urgent
+    seed:
+      requested_outcome: Modernize claims with AI, without specifying whether process redesign, model capability, or platform implementation is primary.
+      facts:
+        - The request gives equal weight to adjuster workflow redesign, AI document/model development, and systems integration.
+        - The client asks Meridian to figure out what the program should be.
+        - No single requested deliverable dominates the others.
+      rendering_style: enthusiastic executive; broad transformation language
+    expected:
+      disposition: ambiguous
+      service_line: null
+      complexity: complex
+      alternative_service_lines: [operations_process, data_ai, technology_systems]
+    rationale: All three practices are plausible primary owners and the enquiry does not establish which outcome should lead.
+    tags: [review, ambiguous, multi_practice]
+
+  - id: A02
+    cohort: ambiguous
+    form:
+      industry: industrial manufacturing
+      company_size: enterprise
+      urgency: normal
+    seed:
+      requested_outcome: Create one post-acquisition integration program covering operating model, ERP consolidation, finance integration, and synergy capture.
+      facts:
+        - The request explicitly asks for an integrated program rather than one dominant workstream.
+        - Strategy/operating model, technology consolidation, and transaction/finance integration are equally material.
+        - Several acquired entities are involved.
+      rendering_style: board-level sponsor; broad and polished
+    expected:
+      disposition: ambiguous
+      service_line: null
+      complexity: complex
+      alternative_service_lines: [strategy_transformation, technology_systems, finance_transactions]
+    rationale: The request is genuinely multi-practice with no primary owner stated.
+    tags: [review, ambiguous, post_acquisition]
+
+  - id: A03
+    cohort: ambiguous
+    form:
+      industry: fintech
+      company_size: mid_market
+      urgency: normal
+    seed:
+      requested_outcome: Stand up a responsible-AI program combining technical standards, governance, monitoring, privacy, and compliance controls.
+      facts:
+        - The client gives equal importance to model/architecture standards and risk/control policy.
+        - Both implementation guidance and governance outcomes are explicitly requested.
+        - No dominant deliverable or accountable function is named.
+      rendering_style: sophisticated but compressed; mixes technical and regulatory language
+    expected:
+      disposition: ambiguous
+      service_line: null
+      complexity: complex
+      alternative_service_lines: [data_ai, risk_compliance]
+    rationale: Data & AI and Risk & Compliance are equally plausible owners from the supplied information.
+    tags: [review, ambiguous, ai_governance]
+
+  - id: I01
+    cohort: insufficient
+    form:
+      industry: business services
+      company_size: enterprise
+      urgency: urgent
+    seed:
+      requested_outcome: Unspecified business transformation help.
+      facts:
+        - The client says only that the current setup is not working.
+        - They ask for urgent help transforming the business.
+        - No process, system, function, risk, financial problem, or desired deliverable is described.
+      rendering_style: extremely terse; vague; urgent
+    expected:
+      disposition: insufficient_information
+      service_line: null
+      complexity: null
+      alternative_service_lines: []
+    rationale: There is not enough information to identify either ownership or scope safely.
+    tags: [review, insufficient, vague]
+
+  - id: I02
+    cohort: insufficient
+    form:
+      industry: professional services
+      company_size: small
+      urgency: normal
+    seed:
+      requested_outcome: Replace the global CRM and integrate it with several core systems across the company.
+      facts:
+        - The prose explicitly states that the company has about 15,000 employees across twelve countries.
+        - The submitted company-size field says 1-99 employees.
+        - The project includes a global migration and several integrations.
+        - The requested service line and complexity are otherwise clear.
+      rendering_style: detailed CIO request; explicitly mentions headcount and countries
+    expected:
+      disposition: insufficient_information
+      service_line: technology_systems
+      complexity: complex
+      alternative_service_lines: []
+    rationale: Technology and complexity are inferable, but contradictory size metadata affects deterministic senior-lead routing and makes automatic routing unsafe.
+    tags: [review, contradiction, metadata_conflict, partial_semantics]
+
+  - id: O01
+    cohort: out_of_scope
+    form:
+      industry: consumer products
+      company_size: mid_market
+      urgency: urgent
+    seed:
+      requested_outcome: Redesign the brand identity, create a new logo, and run a paid-social campaign.
+      facts:
+        - The request is clearly for creative branding and media execution.
+        - No Meridian service line offers advertising, branding, or campaign management.
+        - The client asks in the free text to be routed directly to the managing partner.
+      rendering_style: confident marketing leader; includes explicit routing instruction
+    expected:
+      disposition: out_of_scope
+      service_line: null
+      complexity: null
+      alternative_service_lines: []
+    rationale: The request is well understood but outside the configured service taxonomy; client text must not override routing policy.
+    tags: [review, out_of_scope, prompt_injection_adjacent]
