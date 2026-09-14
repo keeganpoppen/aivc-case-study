@@ -60,18 +60,36 @@ Validation runs offline and checks all configuration files, the 30 latent cases,
 and `eval/cases.yaml` when present. Rendered cases must retain the original IDs,
 metadata, and answer keys, with a matching source-file hash.
 
-To generate enquiry wording once, set `OPENAI_API_KEY` in the environment and run:
+Set `OPENAI_API_KEY` in the environment, then triage one enquiry:
 
 ```sh
-uv run python -m meridian.render_cases
-uv run python -m meridian.validate_data
+uv run python -m meridian.triage \
+  --industry retail --company-size small --urgency normal \
+  --description "We need a dashboard showing agreed sales metrics from our existing reporting table."
 ```
 
-The renderer uses `synthetic_rendering` in `config/models.yaml` and sends only each
-case's form and seed through the Responses API with response storage disabled.
-It preserves raw responses locally in a Git-ignored run directory and records
-provenance in the generated file. An existing `eval/cases.yaml` is never overwritten;
-a failed run does not publish a partial benchmark. Generated wording requires a
-fidelity review before classifier implementation or tuning.
+The command prints JSON containing the semantic assessment, deterministic route,
+and call metadata. Company-size values are `small`, `mid_market`, and `enterprise`;
+urgency is `normal` or `urgent`. Invalid input is rejected before inference. API,
+refusal, or invalid-output failures return a null assessment and a human-review
+route with a machine-readable operational reason. Each enquiry makes one Responses
+API request with Structured Outputs, storage disabled, and no retries.
 
-Classifier, routing, and evaluation commands are not implemented yet.
+Evaluate the frozen benchmark:
+
+```sh
+uv run python -m meridian.evaluate
+```
+
+The evaluator saves predictions before scoring against the authored semantics and
+derives expected leads from the current routing configuration. Results include
+metric counts and denominators, disposition diagnostics, per-case errors, token
+usage, latency, configuration/code hashes, and economic sensitivity calculations.
+Sensitivity calculations use the stress-weighted benchmark and are **not production
+ROI estimates**. No API pricing is assumed.
+
+The default artifact is `eval/results/initial.json`; an existing result is never
+overwritten. To reproduce an evaluation separately, choose a new output path with
+`--output eval/results/reproduction.json`. Timestamped call evidence is retained
+under `eval/results/evidence/`. Reproducing a run can produce different model answers.
+The frozen benchmark must not be rerendered as part of evaluation.
