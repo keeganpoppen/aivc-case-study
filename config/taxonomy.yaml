@@ -1,0 +1,198 @@
+version: 1
+
+classification_policy:
+  primary_owner: >-
+    Classify by the client's primary requested outcome, not by incidental nouns,
+    technologies, departments, or methods mentioned in the enquiry.
+  multiple_practices: >-
+    Mentioning or involving several practices does not require review when one
+    requested outcome clearly dominates. If no defensible primary owner exists,
+    disposition is ambiguous and the enquiry is reviewed.
+  out_of_scope: >-
+    If the request is sufficiently understood but no configured service line owns
+    the requested work, disposition is out_of_scope rather than forcing the nearest label.
+  insufficient_information: >-
+    If missing or contradictory information makes automatic routing unsafe,
+    disposition is insufficient_information. Preserve partial semantic conclusions
+    when they remain supported.
+
+eligibility:
+  global:
+    excluded_industries: []
+    notes: >-
+      Empty in the baseline scenario. This is configuration rather than prompt-only
+      prose so a firm-level scope change can be demonstrated without code changes.
+
+complexity:
+  global:
+    simple: >-
+      Bounded, well-defined work with approximately one deliverable or workstream,
+      few dependencies, and limited coordination or change-management burden.
+    moderate: >-
+      Requires discovery, customization, or coordination across multiple
+      stakeholders, workflows, data sources, or systems, while remaining reasonably bounded.
+    complex: >-
+      Enterprise or multi-business-unit scope; multiple major systems or workstreams;
+      substantial organizational change; material regulatory or risk exposure;
+      significant requirements ambiguity; transaction/integration programs; or
+      dependencies across several functions.
+    principles:
+      - Company size is evidence, not a complexity label.
+      - Urgency does not increase complexity.
+      - A regulated industry does not by itself make work complex.
+      - Cross-practice involvement can increase complexity when it represents real execution dependencies; it does not by itself make ownership ambiguous.
+      - If multiple practices are equally plausible primary owners, use ambiguous disposition rather than encoding ambiguity as complexity.
+
+service_lines:
+  strategy_transformation:
+    name: Strategy & Transformation
+    owns:
+      - growth and market strategy
+      - operating-model design
+      - transformation roadmaps
+      - organizational change strategy
+      - prioritization and investment roadmaps
+    boundary: >-
+      Owns deciding what should change and how the organization should transform.
+      Does not own implementation merely because implementation may follow.
+    eligibility:
+      excluded_industries: []
+    complexity_signals:
+      simple:
+        - bounded market or strategic-option assessment
+        - focused workshop with one decision / recommendation
+      moderate:
+        - multi-stakeholder roadmap or operating-priority design
+        - strategy requiring meaningful discovery across several functions
+      complex:
+        - enterprise target operating model
+        - multi-region or multi-business-unit transformation
+        - transformation program tied to a major transaction or reorganization
+
+  operations_process:
+    name: Operations & Process
+    owns:
+      - workflow and process redesign
+      - service operations
+      - supply-chain and fulfillment operations
+      - operational efficiency
+      - business-process automation when the process outcome is primary
+    boundary: >-
+      Owns improvement of the business process itself. Technology or AI may be
+      implementation mechanisms without becoming the primary service line.
+    eligibility:
+      excluded_industries: []
+    complexity_signals:
+      simple:
+        - one bounded workflow or handoff assessment
+        - one-site process redesign with few dependencies
+      moderate:
+        - process redesign across several stakeholder groups or a small number of sites
+        - meaningful systems dependencies while the process remains primary
+      complex:
+        - many locations or business units
+        - large operating-model / process standardization effort
+        - substantial workforce or change-management component
+
+  data_ai:
+    name: Data & AI
+    owns:
+      - analytics and business intelligence
+      - AI and machine-learning systems
+      - data strategy and governance
+      - data platforms
+      - model prototyping and deployment
+    boundary: >-
+      Owns data or model capability as the requested product. The mere presence of
+      AI terminology does not make an enquiry Data & AI when AI is only a means to
+      an operational, risk, or strategic outcome.
+    eligibility:
+      excluded_industries: []
+    complexity_signals:
+      simple:
+        - bounded dashboard using defined metrics and an existing source of truth
+        - focused analysis with clean, available data
+      moderate:
+        - prototype combining multiple data sources
+        - bounded model / analytics system requiring discovery or customization
+      complex:
+        - enterprise data-platform or governance transformation
+        - multiple regions / business units / data domains
+        - high-stakes model deployment with material governance dependencies
+
+  technology_systems:
+    name: Technology & Systems
+    owns:
+      - ERP and CRM implementation
+      - cloud and infrastructure modernization
+      - systems integration
+      - application implementation
+      - migrations and consolidation
+    boundary: >-
+      Owns software and system delivery. A system used by Finance or Operations does
+      not move ownership there unless the requested outcome is primarily functional
+      redesign rather than technology delivery.
+    eligibility:
+      excluded_industries: []
+    complexity_signals:
+      simple:
+        - configuration of one off-the-shelf platform
+        - bounded migration with few integrations
+      moderate:
+        - system migration plus a small number of integrations
+        - one-business-unit implementation requiring customization
+      complex:
+        - global or multi-business-unit implementation
+        - several major systems and migrations
+        - integration / consolidation after acquisitions
+
+  risk_compliance:
+    name: Risk & Compliance
+    owns:
+      - cybersecurity and security assurance
+      - privacy
+      - controls and audit readiness
+      - regulatory readiness and remediation
+      - operational and model risk governance
+    boundary: >-
+      Owns control, assurance, and regulatory outcomes. Technical or AI systems may
+      be the subject of governance without becoming the primary service line.
+    eligibility:
+      excluded_industries: []
+    complexity_signals:
+      simple:
+        - focused assessment against a known control framework
+        - bounded security / privacy review without remediation program
+      moderate:
+        - readiness or remediation spanning several functions
+        - control design requiring engineering and operations coordination
+      complex:
+        - multi-jurisdiction remediation
+        - enterprise governance program
+        - material regulatory exposure across business units
+
+  finance_transactions:
+    name: Finance & Transactions
+    owns:
+      - FP&A and finance transformation
+      - financial modeling
+      - diligence
+      - valuation
+      - transaction and carve-out support
+    boundary: >-
+      Owns financial and transaction outcomes. Systems can be inputs to diligence or
+      finance transformation without becoming the primary service line when no system
+      implementation is requested.
+    eligibility:
+      excluded_industries: []
+    complexity_signals:
+      simple:
+        - bounded financial model or valuation exercise
+        - focused analysis with one primary deliverable
+      moderate:
+        - FP&A / planning redesign spanning several functions
+        - diligence with a bounded set of workstreams
+      complex:
+        - multi-country or multi-entity transaction
+        - carve-out / integration planning
+        - diligence, valuation, and Day-1 planning across several workstreams
