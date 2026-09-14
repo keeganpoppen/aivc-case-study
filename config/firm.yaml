@@ -1,0 +1,56 @@
+version: 1
+firm:
+  id: meridian_advisory
+  name: Meridian Advisory
+  fictional: true
+  description: >-
+    A generalist professional-services firm serving operating executives at
+    mid-market and enterprise businesses. Smaller-company enquiries can appear and
+    are judged by actual scope rather than company size alone.
+  positioning: >-
+    Meridian helps clients decide, redesign, build, govern, and finance meaningful
+    business change across six specialist practices.
+  typical_buyers:
+    - chief executive officer
+    - chief operating officer
+    - chief financial officer
+    - chief information officer
+    - chief data officer
+    - general counsel / risk leader
+    - functional vice president
+
+intake:
+  fields:
+    description:
+      type: free_text
+      required: true
+      description: Short client-written description of the requested help.
+    industry:
+      type: free_text
+      required: true
+      description: Client-supplied industry; useful context, not a label shortcut.
+    company_size:
+      type: enum
+      required: true
+      values:
+        small:
+          display: 1-99 employees
+        mid_market:
+          display: 100-999 employees
+        enterprise:
+          display: 1000+ employees
+    urgency:
+      type: enum
+      required: true
+      values:
+        normal:
+          display: Normal
+        urgent:
+          display: Urgent
+
+interpretation:
+  - The free-text description carries most semantic information.
+  - Industry supplies context but does not by itself determine service line or complexity.
+  - Company size is evidence about likely scope and is also consumed by routing policy; it is not a complexity label.
+  - Urgency affects downstream priority / SLA, not semantic ownership or complexity.
+  - When structured metadata materially contradicts the description, preserve what can still be inferred but abstain if the contradiction affects routing safety.
