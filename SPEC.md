@@ -242,9 +242,9 @@ reproducible classifier/evaluator.
 
 ## 10. Local inspection workbench
 
-The Phase 3 demo is one localhost-only page backed by the existing triage and
-scoring functions. It supports the four submitted fields, read-only frozen-case
-browsing, explicit live triage, and a collapsed post-run benchmark comparison.
+The Phase 3 demo is a localhost-only Meridian site with an intake page backed by
+the existing triage and scoring functions. It supports the four submitted fields,
+read-only frozen-case browsing, explicit live triage, and an automatic post-run benchmark comparison.
 Editing a loaded case makes it ad-hoc and removes comparison eligibility. Expected
 routes continue to be derived mechanically from frozen semantics and routing policy.
 
@@ -257,3 +257,9 @@ The workbench has no persistence, authentication, or frontend build system. It d
 not change classifier instructions, model settings, business configuration, frozen
 cases, or evaluation evidence. Its optional frozen metric summary is read-only;
 live results are distinguished from the initial untuned evaluation.
+
+The homepage, practice pages, and people pages are thin views over firm, taxonomy,
+and routing configuration. The workbench lives at `/workbench`; result links lead
+to the corresponding practice or person. Presentation titles for test cases are
+kept outside the frozen benchmark. The first-pass summary displays counts from the
+preserved initial evaluation without rerunning it.

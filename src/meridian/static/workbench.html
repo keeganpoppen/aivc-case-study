@@ -1,19 +1,52 @@
 <!doctype html>
 <html lang="en">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>Meridian Advisory · Intake Workbench</title><link rel="stylesheet" href="/static/workbench.css"><script src="/static/workbench.js" defer></script></head>
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Client intake · Meridian Advisory</title>
+  <link rel="stylesheet" href="/static/workbench.css">
+  <script src="/static/site.js" defer></script><script src="/static/workbench.js" defer></script>
+</head>
 <body>
-<header><div class="wordmark">MERIDIAN <span>ADVISORY</span></div><div>Intake Workbench <span class="badge">LOCAL DEMO</span></div></header>
-<div class="intro"><p>A fictional firm. A real triage boundary.</p><div id="practices"></div></div>
-<section class="snapshot" id="snapshot" hidden><div><strong>Frozen untuned benchmark</strong><p>30 stress-weighted synthetic cases; not an estimate of production reliability.</p></div><div id="metrics"></div></section>
-<main>
-<aside><h2>Benchmark cases <span class="muted">30</span></h2><p>Load a submitted enquiry, then run it.</p><button id="manual" class="secondary">New manual enquiry</button><nav id="cases" aria-label="Frozen benchmark cases"></nav></aside>
-<div class="workspace">
-<section class="enquiry"><div class="section-heading"><div><div class="eyebrow">01 / SUBMITTED INFORMATION</div><h1>Inbound enquiry</h1></div><span id="source" class="badge">Manual enquiry</span></div>
-<form id="intake"><fieldset id="fields"><div class="form-row"><label>Industry<input name="industry" required placeholder="e.g. industrial manufacturing"></label><label>Company size<select name="company_size" required></select></label><label>Urgency<select name="urgency" required></select></label></div><label>Description<textarea name="description" rows="8" required placeholder="What would you like help with?"></textarea></label></fieldset><div class="actions"><button id="run" type="submit">Run triage <span aria-hidden="true">→</span></button><span class="muted">One live assessment, followed by deterministic routing.</span></div></form>
-<p id="status" role="status" aria-live="polite"></p></section>
-<details class="generator"><summary>Generate a fictional enquiry <span class="muted">/ optional, ephemeral</span></summary><form id="generator"><label>Scenario idea<input id="scenario" required maxlength="2000" placeholder="A tiny manufacturer with a surprisingly gnarly ERP migration"></label><button id="generate" class="secondary" type="submit">Generate</button></form><p class="muted">Populates the form for you to edit. No answer key; nothing is saved or added to the benchmark.</p></details>
-<section id="results" hidden aria-label="Triage result"><div class="result-grid"><article><div class="eyebrow">02 / SEMANTIC ASSESSMENT</div><h2>What is the enquiry?</h2><p id="summary"></p><dl id="assessment"></dl></article><article class="route-card"><div class="eyebrow">03 / DETERMINISTIC ROUTING</div><p id="mode" class="badge"></p><h2 id="destination"></h2><dl id="routing"></dl></article></div><div class="metadata"><strong>Model call</strong><dl id="metadata"></dl></div><p class="muted">Live result · model answers can differ from the frozen initial run.</p></section>
-<details id="comparison" hidden><summary>Compare with benchmark expectation</summary><div id="comparison-body"></div></details>
-</div></main>
-<footer>Meridian Advisory · Prototype for inspection and demonstration · Interactive state is discarded on refresh.</footer>
-</body></html>
+<header>
+  <a class="wordmark" href="/">MERIDIAN <span>ADVISORY</span></a>
+  <nav class="global-nav" aria-label="Main"><a href="/#practices">Practices</a><a href="/#people">People</a><a href="/workbench" aria-current="page">Client intake</a><span class="badge">LOCAL DEMO</span></nav>
+</header>
+<section class="snapshot" id="snapshot" hidden>
+  <div class="snapshot-intro"><h2>First-pass evaluation</h2><p id="evaluation-story"></p></div>
+  <div id="metrics"></div>
+  <p class="muted">The test intentionally includes more difficult cases than an ordinary intake queue would.</p>
+</section>
+<main class="workbench">
+  <aside><h2>Test enquiries <span class="muted">30</span></h2><nav id="cases" aria-label="Test enquiries"></nav></aside>
+  <div class="workspace">
+    <section class="enquiry">
+      <div class="section-heading"><h1>Client intake</h1><span id="source" class="badge">New enquiry</span></div>
+      <div class="toolbar"><button id="manual" class="secondary">New enquiry</button><button id="generator-toggle" class="secondary" aria-expanded="false" aria-controls="generator-panel">Generate example</button></div>
+      <div id="generator-panel" hidden>
+        <form id="generator"><label>Scenario idea<input id="scenario" required maxlength="2000" placeholder="A tiny manufacturer with a surprisingly gnarly ERP migration"></label><button id="generate" class="secondary" type="submit">Generate</button></form>
+      </div>
+      <form id="intake">
+        <fieldset id="fields">
+          <div class="form-row"><label>Industry<input name="industry" required placeholder="e.g. industrial manufacturing"></label><label>Company size<select name="company_size" required></select></label><label>Urgency<select name="urgency" required></select></label></div>
+          <label>Description<textarea name="description" rows="5" required placeholder="What would you like help with?"></textarea></label>
+        </fieldset>
+        <button id="run" type="submit">Run triage →</button>
+      </form>
+      <p id="status" role="status" aria-live="polite"></p>
+    </section>
+    <section id="results" hidden aria-label="Triage result">
+      <div class="result-grid">
+        <article><div class="eyebrow">ASSESSMENT</div><p id="summary"></p><dl id="assessment"></dl></article>
+        <article class="route-card"><div class="eyebrow">ROUTING</div><p id="mode" class="badge"></p><h2 id="destination"></h2><dl id="routing"></dl></article>
+      </div>
+      <div class="metadata"><dl id="metadata"></dl></div>
+    </section>
+    <section id="comparison" hidden aria-label="Benchmark check" aria-live="polite">
+      <div class="section-heading"><h2>Benchmark check</h2><span id="comparison-count" class="badge"></span></div>
+      <div id="comparison-body"></div>
+    </section>
+  </div>
+</main>
+<footer>Meridian Advisory <span>Local demo · Unsaved session</span></footer>
+</body>
+</html>

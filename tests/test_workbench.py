@@ -13,7 +13,7 @@ from meridian.data import load_config, load_yaml
 from meridian.evaluate import score_case
 from meridian.models import RenderedBenchmark
 from meridian.triage import CallMetadata, SubmittedEnquiry, TriageResult, route
-from meridian.workbench import GeneratedEnquiry, create_app, generate_enquiry
+from meridian.workbench import GeneratedEnquiry, create_app, generate_enquiry, site_data
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -127,8 +127,51 @@ class WorkbenchTests(unittest.TestCase):
             self.assertEqual(self.client.get("/api/cases").status_code,200)
         self.assertEqual(self.client.post("/api/generate",json={"prompt":" "}).status_code,422)
 
+    def test_site_pages_and_public_projection(self):
+        public = self.client.get("/api/site").json()
+        self.assertEqual(set(public), {"firm", "practices", "people"})
+        self.assertEqual(len(public["practices"]), 6)
+        self.assertEqual(len(public["people"]), 12)
+        self.assertIn('site-content', self.client.get("/").text)
+        self.assertIn('id="intake"', self.client.get("/workbench").text)
+        for key, practice in public["practices"].items():
+            original = self.config.taxonomy.service_lines[key]
+            self.assertEqual(practice["name"], original.name)
+            self.assertEqual(practice["owns"], original.owns)
+            self.assertEqual(practice["boundary"], original.boundary)
+            self.assertEqual(practice["complexity_signals"], original.complexity_signals.model_dump())
+            self.assertEqual(self.client.get(f"/practices/{key}").status_code, 200)
+            for role in ("default_lead", "senior_lead"):
+                person = public["people"][practice[role]]
+                self.assertEqual(person["name"], getattr(self.config.routing.service_lines[key], role))
+                self.assertEqual(self.client.get(f"/people/{person['slug']}").status_code, 200)
+        for url in ("/people/missing", "/practices/missing"):
+            self.assertEqual(self.client.get(url).status_code, 404)
+        encoded = json.dumps(public)
+        for case in self.cases:
+            for private in (case.rationale, case.response_id, case.form.description):
+                self.assertNotIn(private, encoded)
+        for private in ('"expected"', '"seed"', '"snapshot"', 'OPENAI_API_KEY'):
+            self.assertNotIn(private, encoded)
+
+    def test_site_people_follow_config_and_router(self):
+        changed = self.config.model_copy(deep=True)
+        changed.routing.service_lines["data_ai"].default_lead = "New Person"
+        changed.routing.policy.enterprise_to_senior_lead = False
+        changed.routing.policy.complex_to_senior_lead = False
+        changed.taxonomy.service_lines["data_ai"].name = "Renamed practice"
+        public = site_data(changed)
+        self.assertEqual(public["practices"]["data_ai"]["name"], "Renamed practice")
+        self.assertEqual(public["practices"]["data_ai"]["default_lead"], "new-person")
+        role = public["people"]["new-person"]["roles"][0]
+        self.assertEqual(role["role"], "Practice Lead")
+        self.assertEqual(len(role["routing_examples"]), 3)
+        self.assertTrue(all(e["complexities"] == ["simple", "moderate", "complex"] for e in role["routing_examples"]))
+        senior = public["people"][public["practices"]["data_ai"]["senior_lead"]]
+        self.assertEqual(senior["roles"][0]["routing_examples"], [])
+
     def test_static_and_local_browser_boundary(self):
-        for url in ("/", "/static/workbench.js", "/static/workbench.css"):
+        for url in ("/", "/workbench", "/static/site.js", "/static/workbench.js", "/static/workbench.css"):
             response = self.client.get(url)
             self.assertEqual(response.status_code,200)
             self.assertEqual(response.headers["cache-control"],"no-store")

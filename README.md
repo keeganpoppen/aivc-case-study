@@ -255,10 +255,11 @@ observed usage totaled **74,907 input tokens / 2,109 output tokens**.
 uv run python -m meridian.workbench
 ```
 
-Open `http://127.0.0.1:8000` to enter an enquiry, browse the frozen cases, or generate
-an ephemeral fictional scenario. Run triage explicitly to inspect the semantic
+Open `http://127.0.0.1:8000` for the Meridian site, with practice and people pages
+derived from configuration. At `/workbench`, enter an enquiry, browse test cases,
+or generate an ephemeral fictional scenario. Run triage explicitly to inspect the semantic
 assessment, deterministic route, and model-call metadata. An unchanged benchmark
-case can reveal its expected semantics and route after a run; edits make it an
+case automatically shows a benchmark check after a run; edits make it an
 ad-hoc enquiry. Live model answers may differ from the frozen untuned result.
 
 Browsing and the frozen benchmark summary work offline. Live triage and generation
