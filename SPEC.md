@@ -237,3 +237,21 @@ path. A small CLI is sufficient.
 A later demo may expose the formal configuration visually — even via a tiny fictional
 Meridian site — but presentation must remain downstream of the functioning,
 reproducible classifier/evaluator.
+
+## 10. Local inspection workbench
+
+The Phase 3 demo is one localhost-only page backed by the existing triage and
+scoring functions. It supports the four submitted fields, read-only frozen-case
+browsing, explicit live triage, and a collapsed post-run benchmark comparison.
+Editing a loaded case makes it ad-hoc and removes comparison eligibility. Expected
+routes continue to be derived mechanically from frozen semantics and routing policy.
+
+An independent ephemeral generator uses the configured synthetic-rendering model
+and company-size / urgency choices to populate the form from a scenario idea. It
+receives no benchmark data, taxonomy, routing leads, classifier output, or evaluation
+results. Generation never creates an answer key or automatically runs triage.
+
+The workbench has no persistence, authentication, or frontend build system. It does
+not change classifier instructions, model settings, business configuration, frozen
+cases, or evaluation evidence. Its optional frozen metric summary is read-only;
+live results are distinguished from the initial untuned evaluation.

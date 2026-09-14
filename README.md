@@ -215,9 +215,9 @@ uv run python -m meridian.validate_data
 uv run python -m unittest discover -s tests -v
 ```
 
-The current suite has 22 offline tests covering benchmark/config invariants,
+The current suite has 29 offline tests covering benchmark/config invariants,
 request isolation, structured-output invariants, routing/rerouting, operational
-fallbacks, metric denominators, and economic calculations.
+fallbacks, metric denominators, economic calculations, and workbench request isolation.
 
 Set `OPENAI_API_KEY`, then triage one enquiry:
 
@@ -243,3 +243,19 @@ uv run python -m meridian.evaluate \
 The initial run used one `gpt-5.6-terra` call per case at low reasoning effort: 30/30
 calls completed with no operational fallback, mean call latency was **1.74 s**, and
 observed usage totaled **74,907 input tokens / 2,109 output tokens**.
+
+## Local workbench
+
+```sh
+uv run python -m meridian.workbench
+```
+
+Open `http://127.0.0.1:8000` to enter an enquiry, browse the frozen cases, or generate
+an ephemeral fictional scenario. Run triage explicitly to inspect the semantic
+assessment, deterministic route, and model-call metadata. An unchanged benchmark
+case can reveal its expected semantics and route after a run; edits make it an
+ad-hoc enquiry. Live model answers may differ from the frozen untuned result.
+
+Browsing and the frozen benchmark summary work offline. Live triage and generation
+use `OPENAI_API_KEY` from the server environment. Interactive enquiries and results
+are not saved, and the workbench never changes the benchmark or evaluation evidence.

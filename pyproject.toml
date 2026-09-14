@@ -5,9 +5,11 @@ description = "AIVC intake triage case study for the fictional Meridian Advisory
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "fastapi>=0.115,<1",
     "openai>=2,<3",
     "pydantic>=2,<3",
     "pyyaml>=6,<7",
+    "uvicorn>=0.30,<1",
 ]
 
 [build-system]
