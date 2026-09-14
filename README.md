@@ -52,7 +52,26 @@ assumptions used to build the prototype.
 
 ```sh
 uv sync --locked
+uv run python -m meridian.validate_data
+uv run python -m unittest discover -s tests -v
 ```
 
-Runnable classification and evaluation commands will be documented here alongside
-the implementation that they exercise.
+Validation runs offline and checks all configuration files, the 30 latent cases,
+and `eval/cases.yaml` when present. Rendered cases must retain the original IDs,
+metadata, and answer keys, with a matching source-file hash.
+
+To generate enquiry wording once, set `OPENAI_API_KEY` in the environment and run:
+
+```sh
+uv run python -m meridian.render_cases
+uv run python -m meridian.validate_data
+```
+
+The renderer uses `synthetic_rendering` in `config/models.yaml` and sends only each
+case's form and seed through the Responses API with response storage disabled.
+It preserves raw responses locally in a Git-ignored run directory and records
+provenance in the generated file. An existing `eval/cases.yaml` is never overwritten;
+a failed run does not publish a partial benchmark. Generated wording requires a
+fidelity review before classifier implementation or tuning.
+
+Classifier, routing, and evaluation commands are not implemented yet.
