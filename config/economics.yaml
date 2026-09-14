@@ -1,0 +1,25 @@
+version: 1
+
+manual_baseline:
+  weekly_enquiries:
+    low: 40
+    midpoint: 50
+    high: 60
+  analyst_hours_per_week: 8.0
+  derived_minutes_per_enquiry_at_midpoint: 9.6
+  note: >-
+    9.6 minutes is derived from the brief's midpoint volume assumption, not measured
+    case-level handling time. The implied range is 8-12 minutes at 60-40 enquiries.
+
+evaluation:
+  human_review_cost_multiple: 1.0
+  misroute_cost_multiples:
+    - 1.0
+    - 3.0
+    - 10.0
+  interpretation:
+    - A review-cost multiple of 1.0 conservatively assumes an abstained case still consumes the full original manual triage effort.
+    - Misroute multipliers are sensitivity assumptions, not measured business costs.
+    - Benchmark case frequencies are deliberately stress-weighted and must not be treated as a production case mix.
+    - API/model usage should be reported separately rather than hidden inside the analyst-minute model.
+    - Production ROI would require observed case mix, actual review time, downstream misroute cost, and ideally response-time / conversion outcomes.
