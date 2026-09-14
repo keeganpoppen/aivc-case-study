@@ -215,11 +215,16 @@ uv run python -m meridian.validate_data
 uv run python -m unittest discover -s tests -v
 ```
 
-The current suite has 29 offline tests covering benchmark/config invariants,
+The offline tests cover benchmark/config invariants,
 request isolation, structured-output invariants, routing/rerouting, operational
 fallbacks, metric denominators, economic calculations, and workbench request isolation.
 
-Set `OPENAI_API_KEY`, then triage one enquiry:
+Put `OPENAI_API_KEY` in the project’s `.env` file or export it in your shell, then
+triage one enquiry. The workbench and API-backed commands load that file
+automatically; exported variables take precedence. Commands with `--root` load
+`.env` from the selected project root. The file is ignored by Git.
+
+Triage one enquiry:
 
 ```sh
 uv run python -m meridian.triage \
@@ -257,5 +262,6 @@ case can reveal its expected semantics and route after a run; edits make it an
 ad-hoc enquiry. Live model answers may differ from the frozen untuned result.
 
 Browsing and the frozen benchmark summary work offline. Live triage and generation
-use `OPENAI_API_KEY` from the server environment. Interactive enquiries and results
+use `OPENAI_API_KEY` from the project’s `.env` or the server environment. Restart
+the server after changing `.env`. Interactive enquiries and results
 are not saved, and the workbench never changes the benchmark or evaluation evidence.

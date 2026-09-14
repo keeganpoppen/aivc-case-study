@@ -216,6 +216,8 @@ Pydantic because the problem needs one structured call, not orchestration. Add a
 abstraction only if it earns its place through observed requirements.
 
 The API credential is supplied through the environment and never committed.
+API-backed commands and the local workbench load the selected project root’s
+ignored `.env` file at startup, preserving any already-exported environment values.
 
 ## 8. Build sequence
 

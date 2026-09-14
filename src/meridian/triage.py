@@ -9,6 +9,7 @@ from typing import Literal
 from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI, OpenAIError
 from pydantic import ValidationError, model_validator
 
+from .environment import load_environment
 from .data import load_config
 from .models import (
     Complexity, Configuration, Disposition, FirmConfig, Model, ModelSettings,
@@ -240,6 +241,7 @@ def main():
     for field in ("description", "industry", "company-size", "urgency"):
         parser.add_argument(f"--{field}", required=True)
     args = parser.parse_args()
+    load_environment(args.root)
     try:
         result = triage(args.description, args.industry, args.company_size, args.urgency,
                         config=load_config(args.root))

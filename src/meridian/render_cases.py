@@ -12,6 +12,7 @@ from openai import OpenAI, OpenAIError
 from pydantic import field_validator
 import yaml
 
+from .environment import load_environment
 from .data import load_config, load_latent, validate_rendered
 from .models import Form, Model, ModelSettings, RenderedBenchmark, Seed
 
@@ -129,6 +130,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Render once from form + seed using the configured OpenAI model.")
     parser.add_argument("--root", type=Path, default=Path.cwd())
     args = parser.parse_args()
+    load_environment(args.root)
     try:
         render(args.root)
     except OpenAIError as exc:

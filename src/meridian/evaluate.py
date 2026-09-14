@@ -17,6 +17,7 @@ from time import perf_counter
 from openai import OpenAI
 import yaml
 
+from .environment import load_environment
 from .data import UniqueKeyLoader, load_config
 from .models import Expected
 from .triage import CLASSIFIER_INSTRUCTION, SubmittedEnquiry, TriageAssessment, route, triage
@@ -199,6 +200,7 @@ def main():
     parser.add_argument("--root", type=Path, default=Path.cwd())
     parser.add_argument("--output", type=Path, default=Path("eval/results/initial.json"))
     args = parser.parse_args()
+    load_environment(args.root)
     try:
         evaluate(args.root.resolve(), args.root / args.output)
     except ValueError as exc:
