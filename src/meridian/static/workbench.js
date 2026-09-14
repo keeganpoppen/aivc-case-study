@@ -1,18 +1,6 @@
 "use strict";
 const form = $("intake");
 const keys = ["industry", "company_size", "urgency", "description"];
-const titles = {
-  S01:"Adjacent-market assessment", S02:"Growth roadmap", S03:"Global operating model",
-  S04:"Warehouse returns", S05:"Dispatch & picking", S06:"Service across 80 locations",
-  S07:"Executive KPI dashboard", S08:"Churn model", S09:"Enterprise data platform",
-  S10:"CRM setup", S11:"Business-unit CRM migration", S12:"Global ERP consolidation",
-  S13:"HIPAA risk assessment", S14:"SOC 2 readiness", S15:"Privacy & control remediation",
-  S16:"Fundraising financial model", S17:"FP&A forecasting", S18:"Cross-border acquisition",
-  H01:"AI strategy", H02:"AI-enabled claims workflow", H03:"Predictive maintenance",
-  H04:"Three-system replacement", H05:"GenAI governance", H06:"Acquisition diligence",
-  A01:"Claims modernization", A02:"Post-acquisition integration", A03:"Responsible AI",
-  I01:"Unspecified transformation", I02:"Conflicting company size", O01:"Branding & paid social"
-};
 const dispositions = {clear:"clear", ambiguous:"ambiguous", insufficient_information:"needs review", out_of_scope:"out of scope"};
 const failureText = {
   unsafe_automatic_route:"Incorrect automatic assignment.", unnecessary_review:"Could have been assigned automatically.",
@@ -41,12 +29,14 @@ function populate(values, item = null, isGenerated = false) {
 }
 function setBusy(value) {
   busy = value; $("fields").disabled = value;
-  document.querySelectorAll("button").forEach(b => {b.disabled = value;}); $("scenario").disabled = value;
+  document.querySelectorAll("button:not(.help-button)").forEach(b => {b.disabled = value;}); $("scenario").disabled = value;
   $("intake").setAttribute("aria-busy", String(value));
 }
 function definitions(id, entries) {
   $(id).replaceChildren(...entries.map(([key,value]) => {
-    const row = node("div"), dd = node("dd"); put(dd,value); row.append(node("dt",key),dd); return row;
+    const row = node("div"), dd = node("dd"); put(dd,value); const label = node("dt",key);
+    if (id === "assessment" && HELP[key]) label.append(infoHelp(key));
+    row.append(label,dd); return row;
   }));
 }
 function alternativeLinks(lines) {
@@ -65,6 +55,7 @@ function showResult(value) {
     ...(a?.review_reasons.length ? [[a.review_reasons.length === 1 ? "Review reason" : "Review reasons",a.review_reasons.join(" ")]] : [])
   ]);
   $("mode").textContent = r.mode === "automatic" ? "AUTOMATIC ASSIGNMENT" : "HUMAN REVIEW";
+  $("mode").append(infoHelp("Assignment"));
   put($("destination"),destinationLink(r));
   document.querySelector(".route-card").classList.toggle("review",r.mode === "review");
   definitions("routing",[["Practice",practiceLink(r.service_line)],["Priority",pretty(r.priority)],["Response target",pretty(r.target_response)]]);
@@ -112,13 +103,13 @@ async function compare(intake, actual, caseId) {
     });
     if(messages.length) $("comparison-body").append(node("p",messages.join(" "),"failures"));
     const context = node("section",null,"test-context");
-    context.append(node("h3","Test context"),node("span","Not scored","muted"));
+    context.append(node("h3","Why this test case exists"));
     if (expected.alternative_service_lines.length) {
       const alternatives = node("p");
       alternatives.append(node("span","Expected alternatives: ","muted"),alternativeLinks(expected.alternative_service_lines));
       context.append(alternatives);
     }
-    context.append(node("p",score.rationale));
+    context.append(node("p",score.rationale),link("View in first-pass evaluation →", `/evaluation?case=${encodeURIComponent(caseId)}`, "context-link"));
     $("comparison-body").append(context);
   } catch(error) {
     if (current === revision) {$("comparison-count").textContent = "UNAVAILABLE"; $("comparison-body").textContent = error.message;}
@@ -171,6 +162,13 @@ async function initialize() {
       }
       $("snapshot").hidden = false;
     }
+    $("comparison").querySelector("h2").append(infoHelp("Benchmark check"));
+    const requested = new URLSearchParams(location.search).get("case");
+    const testCase = cases.find(c => c.id === requested);
+    if (testCase) {
+      populate(testCase.form,testCase);
+      document.querySelector(`.case[data-id="${testCase.id}"]`).closest("details").open = true;
+    } else if (requested) status("Test case not found. Choose an enquiry from the sidebar.",true);
     source(); setBusy(false);
   } catch(error) {status(`Could not load intake: ${error.message}. Refresh to retry.`,true);}
 }

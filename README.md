@@ -255,7 +255,9 @@ observed usage totaled **74,907 input tokens / 2,109 output tokens**.
 uv run python -m meridian.workbench
 ```
 
-Open `http://127.0.0.1:8000` for the Meridian site, with practice and people pages
+The server listens on all network interfaces (`0.0.0.0:8000`). Open
+`http://127.0.0.1:8000` locally, or use the host machine’s network address from
+another device, for the Meridian site, with practice and people pages
 derived from configuration. At `/workbench`, enter an enquiry, browse test cases,
 or generate an ephemeral fictional scenario. Run triage explicitly to inspect the semantic
 assessment, deterministic route, and model-call metadata. An unchanged benchmark
@@ -266,3 +268,7 @@ Browsing and the frozen benchmark summary work offline. Live triage and generati
 use `OPENAI_API_KEY` from the project’s `.env` or the server environment. Restart
 the server after changing `.env`. Interactive enquiries and results
 are not saved, and the workbench never changes the benchmark or evaluation evidence.
+
+The `/evaluation` page shows the preserved first pass, including its cost-sensitivity
+interpretation. Case links connect saved results and live intake; a live call can
+produce a different answer. Contextual help explains the few specialized terms.

@@ -84,3 +84,16 @@ async function showSite() {
   } catch(error) {if ($("site-content")) $("site-content").textContent = error.message;}
 }
 showSite();
+
+const titles = {
+  S01:"Adjacent-market assessment", S02:"Growth roadmap", S03:"Global operating model",
+  S04:"Warehouse returns", S05:"Dispatch & picking", S06:"Service across 80 locations",
+  S07:"Executive KPI dashboard", S08:"Churn model", S09:"Enterprise data platform",
+  S10:"CRM setup", S11:"Business-unit CRM migration", S12:"Global ERP consolidation",
+  S13:"HIPAA risk assessment", S14:"SOC 2 readiness", S15:"Privacy & control remediation",
+  S16:"Fundraising financial model", S17:"FP&A forecasting", S18:"Cross-border acquisition",
+  H01:"AI strategy", H02:"AI-enabled claims workflow", H03:"Predictive maintenance",
+  H04:"Three-system replacement", H05:"GenAI governance", H06:"Acquisition diligence",
+  A01:"Claims modernization", A02:"Post-acquisition integration", A03:"Responsible AI",
+  I01:"Unspecified transformation", I02:"Conflicting company size", O01:"Branding & paid social"
+};

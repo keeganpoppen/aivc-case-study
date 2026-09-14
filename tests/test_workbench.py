@@ -147,6 +147,23 @@ class WorkbenchTests(unittest.TestCase):
             self.assertEqual(self.client.get("/api/cases").status_code,200)
         self.assertEqual(self.client.post("/api/generate",json={"prompt":" "}).status_code,422)
 
+    def test_evaluation_serves_preserved_results_without_inference(self):
+        initial = json.loads((ROOT / "eval/results/initial.json").read_text())
+        with patch("meridian.workbench.pipeline.triage") as infer:
+            self.assertEqual(self.client.get("/evaluation?case=A03").status_code, 200)
+            self.assertEqual(self.client.get("/workbench?case=A03").status_code, 200)
+            response = self.client.get("/api/evaluation")
+            infer.assert_not_called()
+        data = response.json()
+        self.assertEqual(data["metrics"], initial["metrics"])
+        self.assertEqual(data["break_even_misroute_multiple"], initial["economics"]["break_even_misroute_multiple"])
+        self.assertEqual(len(data["cases"]), 30)
+        for row, saved in zip(data["cases"], initial["cases"], strict=True):
+            for key in ("prediction", "expected", "expected_route", "failure_reasons", "intake"):
+                self.assertEqual(row[key], saved[key])
+            self.assertEqual(set(row), {"id", "intake", "prediction", "expected", "expected_route", "failure_reasons", "rationale"})
+            self.assertEqual(row["rationale"], next(c.rationale for c in self.cases if c.id == row["id"]))
+
     def test_site_pages_and_public_projection(self):
         public = self.client.get("/api/site").json()
         self.assertEqual(set(public), {"firm", "practices", "people"})
@@ -196,7 +213,7 @@ class WorkbenchTests(unittest.TestCase):
             self.assertEqual(response.status_code,200)
             self.assertEqual(response.headers["cache-control"],"no-store")
         self.assertEqual(self.client.post("/api/triage",json=self.intake.model_dump(),headers={"Origin":"https://unrelated.example"}).status_code,403)
-        self.assertEqual(self.client.get("/",headers={"Host":"unrelated.example"}).status_code,400)
+        self.assertEqual(self.client.get("/",headers={"Host":"arbitrary-host.example:9876"}).status_code,200)
         self.assertEqual(self.client.post("/api/triage",content="{}").status_code,415)
 
 

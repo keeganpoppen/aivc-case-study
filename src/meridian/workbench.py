@@ -12,7 +12,6 @@ from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from openai import OpenAI, OpenAIError
 from pydantic import Field
-from starlette.middleware.trustedhost import TrustedHostMiddleware
 import uvicorn
 
 from . import triage as pipeline
@@ -106,9 +105,9 @@ def create_app(root: Path | None = None) -> FastAPI:
     organization = site_data(config)
     cases = {case.id: case for case in benchmark.cases}
     snapshot_path = root / "eval/results/initial.json"
-    snapshot = json.loads(snapshot_path.read_text())["metrics"] if snapshot_path.exists() else None
+    initial = json.loads(snapshot_path.read_text()) if snapshot_path.exists() else None
+    snapshot = initial["metrics"] if initial else None
     app = FastAPI(docs_url=None, redoc_url=None, openapi_url=None)
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "testserver"])
 
     @app.middleware("http")
     async def local_requests(request: Request, call_next):
@@ -131,6 +130,22 @@ def create_app(root: Path | None = None) -> FastAPI:
     @app.get("/workbench")
     def page():
         return FileResponse(STATIC / "workbench.html")
+
+    @app.get("/evaluation")
+    def evaluation_page():
+        return FileResponse(STATIC / "evaluation.html")
+
+    @app.get("/api/evaluation")
+    def first_pass():
+        if initial is None:
+            raise HTTPException(404, "First-pass evaluation unavailable.")
+        return {"metrics": initial["metrics"],
+                "break_even_misroute_multiple": initial["economics"]["break_even_misroute_multiple"],
+                "cases": [{"id": row["id"], "intake": row["intake"],
+                           "prediction": row["prediction"], "expected": row["expected"],
+                           "expected_route": row["expected_route"],
+                           "failure_reasons": row["failure_reasons"],
+                           "rationale": cases[row["id"]].rationale} for row in initial["cases"]]}
 
     @app.get("/practices/{service_line_id}")
     def practice_page(service_line_id: str):
@@ -194,8 +209,8 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--port", type=int, default=8000)
     args = parser.parse_args()
-    print(f"Meridian Intake Workbench: http://127.0.0.1:{args.port}/workbench", flush=True)
-    uvicorn.run(create_app(), host="127.0.0.1", port=args.port, access_log=False)
+    print(f"Meridian Intake Workbench: listening on 0.0.0.0:{args.port} · http://127.0.0.1:{args.port}/workbench", flush=True)
+    uvicorn.run(create_app(), host="0.0.0.0", port=args.port, access_log=False)
 
 
 if __name__ == "__main__":

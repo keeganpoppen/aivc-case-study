@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>First-pass evaluation · Meridian Advisory</title>
+  <link rel="stylesheet" href="/static/workbench.css">
+  <script src="/static/site.js" defer></script><script src="/static/evaluation.js" defer></script>
+</head>
+<body>
+<header>
+  <a class="wordmark" href="/">MERIDIAN <span>ADVISORY</span></a>
+  <nav class="global-nav" aria-label="Main"><a href="/#practices">Practices</a><a href="/#people">People</a><a href="/workbench">Client intake</a></nav>
+</header>
+<main class="site-main evaluation-page">
+  <section class="page-hero"><div class="eyebrow">PRESERVED FIRST RUN</div><h1>First-pass evaluation</h1></section>
+  <section class="evaluation-guide"><h2>How to read this evaluation</h2>
+    <p>This benchmark intentionally overrepresents difficult boundary and review cases. It is not a typical intake queue.</p>
+    <p>The important trade-off is how much triage can be automated versus how often automatic routing is unsafe. Review consumes analyst time; misroutes create downstream cost.</p>
+    <p id="sensitivity"></p>
+  </section>
+  <div id="metrics"></div>
+  <section class="evaluation-cases">
+    <label>Test enquiry<select id="evaluation-case" disabled></select></label>
+    <p id="evaluation-status" role="status">Loading the preserved first run…</p>
+    <article id="evaluation-result" hidden></article>
+  </section>
+</main>
+<footer>Meridian Advisory <span>Preserved first-pass evaluation</span></footer>
+</body>
+</html>
