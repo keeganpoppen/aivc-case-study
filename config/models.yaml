@@ -1,0 +1,20 @@
+version: 1
+provider: openai
+api: responses
+store_responses: false
+
+classification:
+  model: gpt-5.6-terra
+  reasoning_effort: low
+  rationale: >-
+    Intake volume is tiny and the cost of a wrong route is likely far larger than
+    inference cost. Terra is a reasonable intelligence/cost default without using a
+    coding-agent runtime. The model remains configurable so observed eval behavior,
+    not attachment to a model name, drives any change.
+
+synthetic_rendering:
+  model: gpt-5.6-luna
+  reasoning_effort: low
+  rationale: >-
+    Rendering realistic wording from already-authored latent facts is a low-stakes
+    generation task. The renderer never sees answer keys or rationales.
