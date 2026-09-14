@@ -523,11 +523,11 @@ cases:
       company_size: enterprise
       urgency: urgent
     seed:
-      requested_outcome: Modernize claims with AI, without specifying whether process redesign, model capability, or platform implementation is primary.
+      requested_outcome: Shape an overall claims-modernization program spanning adjuster workflows, AI document/model capability, and systems integration.
       facts:
-        - The request gives equal weight to adjuster workflow redesign, AI document/model development, and systems integration.
-        - The client asks Meridian to figure out what the program should be.
-        - No single requested deliverable dominates the others.
+        - The client wants adjuster workflow redesign, AI document/model development, and integration with existing claims systems.
+        - The client asks Meridian to shape the overall claims-modernization program and how its workstreams fit together.
+        - The client has not yet selected a starting workstream or a concrete first deliverable.
       rendering_style: enthusiastic executive; broad transformation language
     expected:
       disposition: ambiguous
@@ -546,8 +546,8 @@ cases:
     seed:
       requested_outcome: Create one post-acquisition integration program covering operating model, ERP consolidation, finance integration, and synergy capture.
       facts:
-        - The request explicitly asks for an integrated program rather than one dominant workstream.
-        - Strategy/operating model, technology consolidation, and transaction/finance integration are equally material.
+        - The executive sponsor wants one coordinated post-acquisition integration program.
+        - The program should cover the target operating model, ERP consolidation, finance integration, and synergy capture.
         - Several acquired entities are involved.
       rendering_style: board-level sponsor; broad and polished
     expected:
@@ -567,9 +567,9 @@ cases:
     seed:
       requested_outcome: Stand up a responsible-AI program combining technical standards, governance, monitoring, privacy, and compliance controls.
       facts:
-        - The client gives equal importance to model/architecture standards and risk/control policy.
-        - Both implementation guidance and governance outcomes are explicitly requested.
-        - No dominant deliverable or accountable function is named.
+        - Technical and risk stakeholders are jointly sponsoring the responsible-AI program.
+        - The client wants model/architecture standards and implementation guidance alongside governance and control policy.
+        - The program must address model monitoring, privacy, compliance controls, and regulatory readiness.
       rendering_style: sophisticated but compressed; mixes technical and regulatory language
     expected:
       disposition: ambiguous
@@ -607,19 +607,20 @@ cases:
       company_size: small
       urgency: normal
     seed:
-      requested_outcome: Replace the global CRM and integrate it with several core systems across the company.
+      requested_outcome: Migrate one business unit to a new CRM, including historical customer data and two ordinary downstream integrations.
       facts:
         - The prose explicitly states that the company has about 15,000 employees across twelve countries.
         - The submitted company-size field says 1-99 employees.
-        - The project includes a global migration and several integrations.
-        - The requested service line and complexity are otherwise clear.
+        - Only one business unit is in scope; the engagement is not a global or company-wide rollout.
+        - Historical customer data must be migrated, with two ordinary integrations to billing and customer support.
+        - Business processes largely stay the same.
       rendering_style: detailed CIO request; explicitly mentions headcount and countries
     expected:
       disposition: insufficient_information
       service_line: technology_systems
-      complexity: complex
+      complexity: moderate
       alternative_service_lines: []
-    rationale: Technology and complexity are inferable, but contradictory size metadata affects deterministic senior-lead routing and makes automatic routing unsafe.
+    rationale: Technology & Systems and moderate complexity are inferable from a one-business-unit CRM migration with two ordinary integrations and largely unchanged processes. Under current policy, small plus moderate selects the default Technology lead, while enterprise plus moderate selects the senior Technology lead. The submitted small size conflicts with about 15,000 employees across twelve countries, so automatic final routing is unsafe until company size is clarified.
     tags: [review, contradiction, metadata_conflict, partial_semantics]
 
   - id: O01

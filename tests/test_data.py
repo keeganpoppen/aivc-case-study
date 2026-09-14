@@ -25,7 +25,7 @@ class DataTests(unittest.TestCase):
     def test_frozen_data_and_partial_semantics(self):
         case = next(c for c in self.latent.cases if c.id == "I02")
         self.assertEqual(case.expected.service_line, "technology_systems")
-        self.assertEqual(case.expected.complexity, "complex")
+        self.assertEqual(case.expected.complexity, "moderate")
 
     def test_invalid_benchmark_mutations(self):
         mutations = {

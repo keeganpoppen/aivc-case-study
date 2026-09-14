@@ -123,10 +123,12 @@ whether the model's claim that an enquiry is safe to route is actually reliable.
 Schema/API/model failures are operational fallbacks to human review rather than
 semantic dispositions.
 
-A useful edge case is contradictory metadata: if prose clearly describes a complex
-Technology engagement while the company-size field conflicts with explicit headcount,
-Technology + complex may still be inferable even though deterministic routing is not
-safe. The assessment should preserve those semantics while abstaining.
+A useful edge case is contradictory metadata: a one-business-unit CRM migration
+with two ordinary integrations can remain moderate even at an enterprise-sized
+company. If the submitted size is small but prose states about 15,000 employees,
+Technology + moderate remain inferable while small would select the default lead
+and enterprise the senior lead. The assessment should preserve those semantics
+while abstaining until the routing-relevant company-size contradiction is resolved.
 
 ## 5. Routing contract
 
