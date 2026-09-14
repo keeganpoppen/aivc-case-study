@@ -32,7 +32,7 @@ function clearResult() {
   $("comparison-body").replaceChildren(); status();
 }
 function source() {
-  $("source").textContent = selected ? `Test case ${selected.id}${modified ? " · Modified" : ""}` : generated ? "Generated example" : "New enquiry";
+  $("source").textContent = selected ? `${selected.id} · ${modified ? "modified" : "test"}` : generated ? "Generated example" : "New enquiry";
   document.querySelectorAll(".case").forEach(b => b.setAttribute("aria-current", String(b.dataset.id === selected?.id)));
 }
 function populate(values, item = null, isGenerated = false) {
@@ -60,8 +60,9 @@ function showResult(value) {
   $("summary").textContent = a?.summary || "Assessment unavailable. Human review required.";
   definitions("assessment", [
     ["Disposition",dispositions[a?.disposition] || "—"], ["Service line",practiceLink(a?.service_line)],
-    ["Complexity",pretty(a?.complexity)], ["Alternatives",alternativeLinks(a?.alternative_service_lines || [])],
-    ["Review reasons",a?.review_reasons.join(" ") || "—"]
+    ["Complexity",pretty(a?.complexity)],
+    ...(a?.alternative_service_lines.length ? [["Alternatives",alternativeLinks(a.alternative_service_lines)]] : []),
+    ...(a?.review_reasons.length ? [[a.review_reasons.length === 1 ? "Review reason" : "Review reasons",a.review_reasons.join(" ")]] : [])
   ]);
   $("mode").textContent = r.mode === "automatic" ? "AUTOMATIC ASSIGNMENT" : "HUMAN REVIEW";
   put($("destination"),destinationLink(r));
@@ -110,6 +111,15 @@ async function compare(intake, actual, caseId) {
       return [failureText[reason] || "Result differs from the test expectation."];
     });
     if(messages.length) $("comparison-body").append(node("p",messages.join(" "),"failures"));
+    const context = node("section",null,"test-context");
+    context.append(node("h3","Test context"),node("span","Not scored","muted"));
+    if (expected.alternative_service_lines.length) {
+      const alternatives = node("p");
+      alternatives.append(node("span","Expected alternatives: ","muted"),alternativeLinks(expected.alternative_service_lines));
+      context.append(alternatives);
+    }
+    context.append(node("p",score.rationale));
+    $("comparison-body").append(context);
   } catch(error) {
     if (current === revision) {$("comparison-count").textContent = "UNAVAILABLE"; $("comparison-body").textContent = error.message;}
   }
@@ -144,15 +154,18 @@ async function initialize() {
       const option = node("option",choice.display.replace(/(\d)-(\d)/g,"$1–$2")); option.value = value; form.elements[key].append(option);
     });
     for (const [label,prefixes] of [["Routine",["S"]],["Boundary cases",["H"]],["Needs review",["A","I","O"]]]) {
-      $("cases").append(node("h3",label));
-      cases.filter(c => prefixes.includes(c.id[0])).forEach(c => {
+      const members = cases.filter(c => prefixes.includes(c.id[0]));
+      const group = node("details",null,"case-group"); group.open = label !== "Routine";
+      group.append(node("summary",`${label} (${members.length})`));
+      $("cases").append(group);
+      members.forEach(c => {
         const b = node("button",`${c.id} · ${titles[c.id] || c.form.industry}`,"case"); b.dataset.id = c.id;
-        b.append(node("small",c.form.industry)); b.onclick = () => {if (!busy) populate(c.form,c);}; $("cases").append(b);
+        b.append(node("small",c.form.industry)); b.onclick = () => {if (!busy) {group.open = true; populate(c.form,c);}}; group.append(b);
       });
     }
     if(config.snapshot) {
       const m = config.snapshot, auto = m.automation_coverage, correct = m.selective_route_accuracy;
-      $("evaluation-story").textContent = `Before any tuning, we ran the system once on ${auto.denominator} synthetic enquiries chosen to include difficult boundary and review cases. It automatically routed ${auto.numerator}; ${correct.numerator} of those routes were correct.`;
+      $("evaluation-story").textContent = `On the first run, before seeing any results, we tested ${auto.denominator} synthetic enquiries chosen to include difficult boundary and review cases. The system automatically routed ${auto.numerator}; ${correct.numerator} of those routes were correct.`;
       for (const [key,label,countOnly] of [["selective_route_accuracy","correct automatic routes"],["unsafe_automation_rate","unsafe automatic routes",true],["review_recall","cases needing review caught"],["service_line_accuracy","service lines correct"],["complexity_accuracy","complexity labels correct"]]) {
         const metric = m[key], item = node("div"); item.append(node("strong",countOnly ? `${metric.numerator}` : `${metric.numerator} / ${metric.denominator}`),node("span",label)); $("metrics").append(item);
       }

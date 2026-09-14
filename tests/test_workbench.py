@@ -65,7 +65,8 @@ class WorkbenchTests(unittest.TestCase):
         with patch("meridian.workbench.load_config", return_value=changed):
             with TestClient(create_app(ROOT)) as client:
                 response = client.post("/api/cases/I02/expected", json={"intake":intake.model_dump(), "result":result.model_dump()})
-        self.assertEqual(response.json(), score_case(result, case.expected, intake, changed.routing))
+        self.assertEqual(response.json(), {**score_case(result, case.expected, intake, changed.routing),
+                                           "rationale": case.rationale})
         self.assertEqual(response.json()["expected_route"]["destination"], "New review queue")
         self.assertIn("unsafe_automatic_route", response.json()["failure_reasons"])
         # Automatic expected leads also come from current policy, never saved result leads.
@@ -74,6 +75,25 @@ class WorkbenchTests(unittest.TestCase):
             with TestClient(create_app(ROOT)) as client:
                 response = client.post("/api/cases/S01/expected", json={"intake":self.intake.model_dump(), "result":self.fallback.model_dump()})
         self.assertEqual(response.json()["expected_route"]["destination"], "New owner")
+
+    def test_expected_context_is_frozen_and_requires_exact_intake(self):
+        for case_id in ("A03", "I02"):
+            case = next(c for c in self.cases if c.id == case_id)
+            body = {"intake": case.form.model_dump(), "result": self.fallback.model_dump()}
+            response = self.client.post(f"/api/cases/{case_id}/expected", json=body)
+            self.assertEqual(response.status_code, 200)
+            data = response.json()
+            self.assertEqual(data["rationale"], case.rationale)
+            self.assertEqual(data["expected"]["alternative_service_lines"], case.expected.alternative_service_lines)
+            for forbidden in ("seed", "tags", "response_id"):
+                self.assertNotIn(forbidden, data)
+            body["intake"]["industry"] += " edited"
+            rejected = self.client.post(f"/api/cases/{case_id}/expected", json=body)
+            self.assertEqual(rejected.status_code, 409)
+            self.assertNotIn("rationale", rejected.json())
+            self.assertNotIn("expected", rejected.json())
+        for row in self.client.get("/api/cases").json():
+            self.assertEqual(set(row), {"id", "cohort", "form"})
 
     def test_modified_input_rejected_and_artifacts_unchanged(self):
         paths = [*sorted((ROOT / "eval").rglob("*")), *sorted((ROOT / "config").glob("*.yaml"))]

@@ -176,7 +176,8 @@ def create_app(root: Path | None = None) -> FastAPI:
         if submitted.intake.model_dump() != case.form.model_dump():
             raise HTTPException(409, "Modified enquiries cannot be compared with the frozen benchmark.")
         # Stateless display comparison; this result is never admitted as evaluation evidence.
-        return score_case(submitted.result, case.expected, submitted.intake, config.routing)
+        return {**score_case(submitted.result, case.expected, submitted.intake, config.routing),
+                "rationale": case.rationale}
 
     @app.post("/api/generate")
     def generate(scenario: Scenario):
