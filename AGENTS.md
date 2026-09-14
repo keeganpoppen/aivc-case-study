@@ -23,11 +23,15 @@ EVALUATION.md before making implementation decisions.
 - `eval/latent_cases.yaml` and its semantic answer keys were authored before the
   classifier. Do not change benchmark labels after seeing classifier results except
   to correct a demonstrable labeling error, and record any such correction.
+- `eval/cases.yaml` is the frozen rendered benchmark from the pre-classifier Phase
+  1.5 checkpoint. Do not rerender, rewrite, relabel, or otherwise tune benchmark
+  inputs after classifier work begins except to correct a demonstrable benchmark
+  defect, and record any such correction explicitly.
 - Synthetic wording must be rendered from form + seed only. The rendering model
-  must never receive expected labels or rationales. Review/freeze rendered wording
-  before classifier implementation or tuning.
+  must never receive expected labels or rationales.
 - The classifier sees only submitted fields and semantic config, never answer keys,
-  rationales, or lead names. Routing sees the validated assessment + routing config.
+  rationales, tags, cohort names, response IDs, or lead names. Routing sees the
+  validated assessment + routing config.
 - Preserve raw/reproducible evaluation evidence. Do not claim a stress-weighted
   synthetic benchmark estimates production reliability or production case mix.
 - Prioritize a functioning prototype and reproducible results. UI, live scenario
@@ -39,7 +43,9 @@ EVALUATION.md before making implementation decisions.
   checkpoints. Do not commit credentials or modify the enclosing parent repository.
 - The GitHub repository is `keeganpoppen/aivc-case-study`.
 
-Current phase: the evaluation contract and 30 latent answer keys are frozen.
-Next: implement offline schema/invariant validation plus the one-time synthetic
-wording renderer; render and review enquiry descriptions; only then implement the
-classifier/router/evaluator.
+Current phase: the evaluation contract, semantic answer keys, and 30 rendered
+enquiry descriptions are frozen before classifier implementation. Phase 1.5 commit
+`93ced9e13b5ebc521ba1ad6c52816d415d0a0b5a` is the benchmark checkpoint.
+Next: implement the minimal structured classifier, deterministic router, and
+reproducible evaluator against the frozen benchmark; inspect the first untuned
+results before making any classifier/prompt/model changes.
