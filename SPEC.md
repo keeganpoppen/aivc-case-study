@@ -1,241 +1,237 @@
-# Meridian v0 specification and decision record
+# Meridian v0 specification
 
-This is the portable record of the design accepted in **Case Study Strategy**
-(ChatGPT conversation `6aa71e82-77d8-83ea-b9dd-c255cbfd691c`) and carried into the
-current AIVC continuation task (`01a09d20-4b78-7c00-87c8-262d1bfc513e`) on
-2026-09-13. That task is the canonical decision log. Later decisions there take
-precedence; update this record to keep it aligned.
+This document records the assumptions and system contract behind the intake-triage
+prototype. The fictional firm exists because the exercise intentionally omits the
+business taxonomy and routing policy that would normally be learned from the client.
+Those assumptions are configuration, not hidden prompt lore.
 
-The original PDF and full retrieved discussion are in `.local/reference/`.
-The PDF supplies requirements; the discussion supplies our fictional operating
-assumptions. Neither constitutes evidence that the eventual prototype works.
+## 1. Problem
 
-## 1. Requirements from the brief
+Meridian Advisory receives an inbound enquiry with four submitted fields:
 
-- 40-60 inbound web-form enquiries weekly; four inputs: short description,
-  industry, company size, and urgency.
-- Existing manual work: service-line tagging, simple/moderate/complex estimation,
-  and routing to a team lead; approximately eight analyst-hours per week.
-- Deliver a functioning prototype of the vital classification/routing logic,
-  using synthetic data. Format is flexible.
-- Architecture (1-2 pages or diagram with notes) and a half-page discussion of
-  production failures, monitoring, and fallback are optional supplements.
-- Spend 2-3 hours; prioritize depth over breadth. AI assistance is allowed.
-- Submit no later than 24 hours before the panel interview. The subsequent
-  technical conversation lasts 30-45 minutes. The interview date is not known here.
+- free-text description,
+- industry,
+- company size,
+- urgency.
 
-## 2. Accepted operating assumptions
+The existing manual step assigns a service line, estimates engagement complexity
+(simple / moderate / complex), and routes the enquiry to a team lead. The prototype
+replaces that triage step where it can do so safely and explicitly abstains where it
+cannot.
 
-Meridian Advisory is a fictional generalist consultancy serving operating
-executives at mid-market and enterprise businesses. Small-company requests can
-also appear and must be handled according to their actual scope.
+The brief gives a volume of 40–60 enquiries per week and roughly eight analyst-hours
+of manual triage. At a midpoint of 50 enquiries/week, that implies 9.6 analyst-minutes
+per enquiry. That number is useful as an operating baseline, not as proof that labor
+savings are the only or largest source of business value.
 
-| Service line | Primary problem and boundary |
-| --- | --- |
-| Strategy & Transformation | Growth, operating models, transformation roadmaps, organizational change; deciding what/how to transform. |
-| Operations & Process | Workflow redesign, supply chain, service operations, process efficiency/automation; the business process is primary. |
-| Data & AI | Analytics, AI/ML, BI, data platforms/strategy/governance; data or model capability is primary. |
-| Technology & Systems | ERP/CRM, cloud, integration, migrations, application implementation; system delivery is primary. |
-| Risk & Compliance | Cybersecurity, privacy, controls, regulatory readiness, operational risk; risk/control obligation is primary. |
-| Finance & Transactions | FP&A, finance transformation, diligence, valuation, transaction support; finance/transaction problem is primary. |
+## 2. Design thesis
 
-These practices overlap. Each enquiry has a clear primary owner or should go to
-human review. Mentioning several practices is not by itself a reason to abstain
-when one is clearly dominant.
-
-Useful boundaries from the agreed scenario include an AI-powered claims workflow
-(Operations or Data & AI), finance ERP modernization (Technology or Finance),
-bank AI governance (Data & AI or Risk), and post-acquisition systems consolidation
-(Strategy, Finance, or Technology). The actual requested outcome determines
-whether a primary practice is clear; keywords alone do not settle these cases.
-
-### Complexity rubric
-
-- **Simple:** bounded, well-defined work, approximately one deliverable/workstream,
-  few dependencies. Examples: one-process assessment, bounded dashboard, focused
-  compliance review, configuration of an existing platform.
-- **Moderate:** discovery/customization or coordination across stakeholders,
-  workflows, data sources, or systems, while remaining reasonably bounded.
-- **Complex:** enterprise/multi-business-unit scope, multiple major systems or
-  workstreams, substantial organizational change, material regulatory/risk exposure,
-  significant requirements ambiguity, a transaction/integration program, or
-  dependencies across several functions.
-
-Company size is evidence, not a complexity label. Large companies can request
-simple work; small companies can request complex work. Being in a regulated
-industry alone does not establish material risk exposure.
-
-### Routing and priority
-
-Each practice has a default lead and a senior lead. Review takes precedence:
-
-1. Ambiguous or insufficient assessments go to human review.
-2. Otherwise, complex work or enterprise accounts go to the senior practice lead.
-3. Other clear enquiries go to the default practice lead.
-
-The complex/enterprise escalation rules are independent configuration switches.
-Urgency changes priority/SLA, not semantic ownership. Industry supplies context.
-Routing produces a local decision; live CRM writes are outside v0.
-
-## 3. Accepted system contract
-
-Input validation/normalization -> one structured LLM assessment -> output validation
--> deterministic routing policy -> team lead or human-review result.
-
-Assessment fields agreed in the discussion:
-
-- `summary`: concise enrichment grounded in submitted information.
-- `service_line`: a configured service-line identifier or null.
-- `complexity`: simple, moderate, complex, or null.
-- `disposition`: clear, ambiguous, or insufficient_information.
-- `alternative_service_lines`: plausible alternative practice identifiers.
-- `review_reasons`: explicit reasons for abstention.
-
-No model-generated numeric confidence. The system measures how often a claim of
-clear ownership is correct. Model/schema failure falls back to human review.
-
-Taxonomy definitions and complexity rubric are read from configuration and passed
-to the classifier. Ownership and escalation policy are read separately by ordinary
-code; the model does not choose a person's name. Saved assessments can be routed
-again after a policy change, with no new model invocation.
-
-Two distinct demonstrations must be possible:
-
-- Change a taxonomy definition and rerun classification.
-- Change lead ownership or escalation policy and reroute the same assessment;
-  classification stays identical.
-
-## 4. Evaluation commitments
-
-Define the evaluation contract and latent cases **before implementing the
-classifier**. Authors choose the underlying facts and expected labels first.
-Optional generative wording introduces realistic language, not the answer key.
-Review rendered wording to ensure it still supports the intended labels.
-
-Target approximately 30 cases:
-
-| Group | Count | Purpose |
-| --- | ---: | --- |
-| Straightforward, realistically messy | 18 | Three per practice. |
-| Hard but routeable | 6 | Overlapping vocabulary with a dominant owner. |
-| Genuinely ambiguous | 3 | Human review is expected. |
-| Insufficient/contradictory | 3 | Human review is expected. |
-
-Distribute small/complex and large/simple requests, urgency disagreements,
-incidental technology mentions, regulated contexts, terse and rambling wording,
-and references to practices that are not actually being requested.
-
-Report service-line accuracy, complexity accuracy, review recall, selective
-accuracy among automatic routes, automation coverage, and operational cost under
-an explicit misroute penalty. Preserve failures and honest denominators. Synthetic
-results are development evidence, not an estimate of production reliability.
-
-The exact matching rules, handling of missing labels/zero denominators, and
-definition of a correct final route are the next evaluation-contract work item.
-
-### Cost assumptions
-
-At the midpoint of the brief's volume range, `m = 480 / 50 = 9.6` analyst minutes
-per enquiry. This is a **derived midpoint estimate**, not a separately measured
-per-case cost. The implied range is 8-12 minutes at 60-40 enquiries per week.
-
-For N cases, R sent for human review, and W incorrectly auto-routed:
+This is intentionally **not an agentic workflow**.
 
 ```text
-manual cost = N * m
-system cost = R * m + W * lambda
-estimated savings = manual cost - system cost
+validated intake
+    -> one structured semantic assessment
+    -> validated assessment
+    -> deterministic routing policy
+    -> team lead or human review
 ```
 
-Lambda is an unknown business cost expressed in equivalent analyst-minutes;
-show configurable sensitivity rather than inventing its true value. Changing
-lambda changes the evaluation, not automatically the decision policy. Compare
-policies only if actually implemented and measured. This simplified model omits
-implementation, maintenance, API expense, and conversion effects; report model
-usage separately where available. It does not establish investment ROI.
+The model answers **what is this enquiry?** Ordinary code answers **what should
+Meridian do with an enquiry like this?**
 
-### What the artifact should demonstrate
+That separation is useful only because it is observable:
 
-Each design choice must earn its place through observable behavior:
+- changing taxonomy / scope can change classification;
+- changing team ownership can reroute an unchanged saved assessment without a model call;
+- changing economic assumptions can change the reported value without changing either.
 
-| Choice | Evidence to produce |
+The implementation should remain small enough that these boundaries are obvious.
+
+## 3. Meridian operating model
+
+The formal configuration is split by reason-for-change:
+
+- `config/firm.yaml` — firm identity, submitted fields, company-size bands, and metadata semantics;
+- `config/taxonomy.yaml` — service-line scope, boundaries, eligibility, and global + practice-specific complexity guidance;
+- `config/routing.yaml` — lead ownership, escalation, review queue, and urgency/SLA policy;
+- `config/economics.yaml` — manual baseline and sensitivity assumptions used by evaluation.
+
+### Service lines
+
+Meridian is a fictional generalist consultancy with six practices:
+
+| Service line | Primary ownership boundary |
 | --- | --- |
-| Configurable business assumptions | Edit a taxonomy/rubric definition and inspect the changed classification. |
-| Separate organizational routing | Change a lead or escalation rule and reroute the identical saved assessment without a model call. |
-| Explicit abstention | Show review recall and the coverage/error tradeoff, including unnecessary reviews and wrong automatic routes. |
-| Latent facts before generated wording | Keep the authored labels independent from the model that renders customer language. |
-| Operational cost assumptions | Recalculate estimated savings across misroute penalties; retain negative results when they occur. |
-| Small implementation | One semantic assessment followed by ordinary validation and routing code. |
+| Strategy & Transformation | Growth, operating models, transformation roadmaps, organizational change; deciding what/how to transform. |
+| Operations & Process | Workflow redesign, service operations, supply chain, operational efficiency; the business process is primary. |
+| Data & AI | Analytics, AI/ML, data strategy/governance/platforms; data or model capability is primary. |
+| Technology & Systems | ERP/CRM, cloud, integrations, migrations, applications; software/system delivery is primary. |
+| Risk & Compliance | Cybersecurity, privacy, controls, regulatory readiness, risk governance; assurance/control outcome is primary. |
+| Finance & Transactions | FP&A, financial modeling, diligence, valuation, transaction support; finance/transaction outcome is primary. |
 
-Do not manufacture mistakes or tune for a theatrical score. The point of difficult
-cases is to expose real failure modes and report them honestly. Faster responses,
-fewer dropped leads, conversion, and better qualification are potential business
-benefits to investigate; none has been measured by this case study.
+These practices intentionally overlap. Ownership follows the client's **requested
+outcome**, not keywords. AI can be a means inside an Operations engagement; an ERP
+can be used by Finance without making Finance the implementation owner; AI governance
+can primarily be a Risk engagement.
 
-## 5. Scope and work sequence
+### Complexity
 
-1. Complete the evaluation contract and approximately 30 latent cases.
-2. Review/freeze the dataset and answer key before classifier tuning.
-3. Implement the smallest classifier/abstention/router satisfying that contract.
-4. Run evaluations, inspect failures, and make evidence-driven changes.
-5. Package the working prototype, data, and actual generated results.
-6. Finish README architecture/production notes; prepare interview narrative after
-   the deliverable is sound.
+The global rubric is:
 
-No agent framework, vector database, workflow platform, elaborate synthetic-data
-factory, or browser UI on the critical path. A CLI is sufficient. A live scenario
-generator and UI are optional additions only if time remains. Complexity errors
-are reported separately without expanding the simple cost model unnecessarily.
+- **Simple** — bounded, well-defined work with about one deliverable/workstream and few dependencies.
+- **Moderate** — meaningful discovery/customization or coordination across stakeholders, workflows, data sources, or systems while remaining reasonably bounded.
+- **Complex** — enterprise/multi-unit scope, several major systems/workstreams, substantial organizational change, material regulatory exposure, significant requirements ambiguity, transaction/integration programs, or dependencies across several functions.
 
-## 6. Setup decisions — 2026-09-13
+Each service line also supplies domain-specific complexity evidence. For example,
+Technology treats global multi-system migration as complex; Risk treats multi-
+jurisdiction remediation as complex. These are model guidance, not a second hidden
+rules engine.
 
-**Accepted design:** Sections 2-5 preserve the plan the user accepted in the source
-discussion. The clarified midpoint estimate in section 4 corrects an overstatement
-in that discussion without changing the formula or chosen baseline.
+Company size is evidence, not a complexity label. Urgency is not complexity. A
+regulated industry is not automatically complex.
 
-**User-selected location:** `/Users/elkeegano/life/aivc`.
+Cross-practice work has two distinct interpretations:
 
-**Implementation setup:** use Python 3.13 with uv, a project-local virtual
-environment, and a lockfile. The original sketch already used Python; these
-specific tooling choices are setup defaults, not requirements of the brief.
-Add dependencies only when used. Work locally on main; checkpoint only when
-the user asks. The parent `/Users/elkeegano/life` is already a Git repository;
-this case study gets its own nested repository with a separate Git history.
-An explicit empty uv workspace bounds discovery at this folder, avoiding the
-invalid Python-version setting in the parent project. The parent was not edited.
-`uv sync --locked`, `uv run python --version`, and `uv sync --locked --check`
-passed with Python 3.13.2 and uv 0.6.11.
+- if one practice clearly owns the outcome, other-practice dependencies may increase complexity;
+- if multiple practices are equally plausible primary owners, the disposition is `ambiguous` and the system abstains.
 
-**GitHub:** created private
-[`keeganpoppen/aivc-case-study`](https://github.com/keeganpoppen/aivc-case-study)
-(repository ID `1369024539`). The user signed in through the in-app browser;
-the form already held `aivc-case-study` and Private, so those selections were
-preserved instead of the earlier proposed `meridian` repository name.
-`origin` is `git@github.com:keeganpoppen/aivc-case-study.git`. The connected GitHub
-tools confirm admin/push access. A read-only terminal `git ls-remote origin` check
-failed with `Permission denied (publickey)`; browser sign-in does not configure
-terminal Git authentication.
+Eligibility / out-of-scope policy is separate from complexity. A future rule such as
+"this practice does not serve industry X" should change scope, not pretend that
+industry X is unusually complex.
 
-**Checkpoint workflow:** the user explicitly selected the connector and authorized
-uploading the relevant work in this task. Use it to publish the specification,
-working agreement, README, and locked environment setup. Synchronize the local
-Git history to the published commits so the checkout and GitHub share the same
-history. Further requested checkpoints use this workflow; terminal credential
-setup is not a prerequisite. The source PDF, raw conversation, and environment
-files stay local and ignored. Nothing is submitted to interviewers by this upload.
+## 4. Semantic assessment contract
 
-**Continuity:** this task owns decisions; this specification records them; code
-and evaluation outputs record what actually exists. Keep the original brief and
-source discussion in ignored `.local/reference/` so context survives without
-publishing the interview discussion. GitHub is a checkpoint/submission surface.
+The model returns one structured object with these semantic fields:
 
-**Still to settle during the next step:** precise input enums and enterprise
-threshold; actual fictional lead identifiers; urgency normalization/conflict
-handling; output invariants and treatment of out-of-scope requests without silently
-adding a disposition; evaluation matching rules; model/provider and credential
-source. These details were not frozen in the prior discussion.
+- `summary` — concise enrichment grounded in submitted information;
+- `service_line` — configured service-line identifier or null;
+- `complexity` — `simple`, `moderate`, `complex`, or null;
+- `disposition` — `clear`, `ambiguous`, `insufficient_information`, or `out_of_scope`;
+- `alternative_service_lines` — plausible alternatives where useful;
+- `review_reasons` — explicit reasons an enquiry should not be auto-routed.
 
-**Current milestone:** publish the specification and environment checkpoint.
-Dataset, classifier, router, evaluator, and results remain to be built in the order
-above. The next work item is the evaluation contract and approximately 30 latent
-cases, including resolution of the open domain-policy details.
+There is deliberately **no model-generated numeric confidence**. The system measures
+whether the model's claim that an enquiry is safe to route is actually reliable.
+
+### Disposition invariants
+
+- `clear` requires a primary service line and complexity.
+- `ambiguous` has no primary line, at least two plausible alternatives, and a review reason.
+- `insufficient_information` requires a review reason but may retain partial semantic conclusions that remain supported.
+- `out_of_scope` has no primary line and an explicit scope reason.
+
+Schema/API/model failures are operational fallbacks to human review rather than
+semantic dispositions.
+
+A useful edge case is contradictory metadata: if prose clearly describes a complex
+Technology engagement while the company-size field conflicts with explicit headcount,
+Technology + complex may still be inferable even though deterministic routing is not
+safe. The assessment should preserve those semantics while abstaining.
+
+## 5. Routing contract
+
+Routing is ordinary deterministic code consuming the validated assessment and
+`config/routing.yaml`.
+
+Baseline policy:
+
+1. Any review disposition goes to the central human-review queue.
+2. Otherwise, complex work goes to the service line's senior lead.
+3. Otherwise, enterprise accounts go to the service line's senior lead.
+4. Other clear work goes to the default lead.
+5. Urgency changes priority / target response time, never semantic ownership.
+
+Expected route is **not** hard-coded into benchmark answer keys. It is derived from
+the frozen expected semantic assessment plus the current routing config. This lets
+organizational policy change without invalidating the semantic benchmark.
+
+## 6. Evaluation contract
+
+`EVALUATION.md` defines the scoring semantics. `eval/latent_cases.yaml` freezes the
+30 latent cases and answer keys before classifier implementation.
+
+The benchmark is deliberately stress-weighted:
+
+| Cohort | Count |
+| --- | ---: |
+| Straightforward: one simple/moderate/complex case per practice | 18 |
+| Hard but routeable practice-boundary cases | 6 |
+| Genuinely ambiguous | 3 |
+| Insufficient / contradictory | 2 |
+| Out of scope | 1 |
+
+Natural-language descriptions are generated from **form + latent seed only**. The
+renderer never sees expected labels or rationale. Generated wording is reviewed for
+fidelity and then frozen before classifier tuning.
+
+Headline evaluation emphasizes selective automation:
+
+- automation coverage,
+- selective route accuracy,
+- unsafe automation rate,
+- review recall,
+- unnecessary review rate,
+- service-line accuracy,
+- complexity accuracy.
+
+Summary prose, review reasons, and alternative lines are schema-validated and
+inspected qualitatively rather than scored by a second LLM pretending to be a ruler.
+
+### Economic sensitivity
+
+The stress-weighted benchmark must not be mistaken for a production case-frequency
+sample. Economics are therefore a separate configurable sensitivity calculation.
+
+For `N` cases, `R` human reviews, `W` wrong automatic routes, manual minutes `m`,
+review multiple `r`, and misroute multiple `k`:
+
+```text
+manual_cost = N * m
+system_cost = (R * r * m) + (W * k * m)
+```
+
+The evaluator reports several `k` assumptions and, when possible, the break-even
+misroute penalty. It explicitly does **not** call this production ROI. Real ROI would
+need observed case mix, review time, API cost, downstream misroute cost, and ideally
+response-time / conversion outcomes.
+
+## 7. Model/runtime choice
+
+The runtime classifier should use the ordinary OpenAI Responses API with Structured
+Outputs validated into Pydantic models. The model ID and reasoning effort are
+configuration, not business logic. Requests should be stateless for this use case;
+no conversation/thread is required, and response storage should be disabled where
+supported.
+
+Do **not** use Codex SDK as the production inference harness. Codex SDK is designed to
+control local coding agents; using an agent runtime for one structured semantic
+classification would add lifecycle/state/filesystem machinery that this problem does
+not need and would weaken the design thesis above.
+
+Likewise, an additional agent framework such as PydanticAI is optional rather than
+necessary. The default implementation should prefer the official OpenAI SDK +
+Pydantic because the problem needs one structured call, not orchestration. Add an
+abstraction only if it earns its place through observed requirements.
+
+The API credential is supplied through the environment and never committed.
+
+## 8. Build sequence
+
+1. **Done:** define evaluation semantics and latent answer key before classifier work.
+2. Render realistic enquiry descriptions from latent facts without exposing answer keys.
+3. Review/freeze rendered cases; validate schemas and case counts.
+4. Implement input models, semantic classifier, output invariants, and deterministic router.
+5. Run the frozen benchmark and preserve raw results.
+6. Inspect errors and make only evidence-driven classifier/prompt changes.
+7. Add evaluator-facing result tables, error analysis, architecture/fallback notes, and reproducible run commands to README.
+8. Optional only after the core deliverable is sound: tiny presentation/demo surface.
+
+## 9. Explicit non-goals for v0
+
+No agent framework, vector database, RAG system, workflow engine, live CRM write,
+production queue, elaborate synthetic-data factory, or browser UI is on the critical
+path. A small CLI is sufficient.
+
+A later demo may expose the formal configuration visually — even via a tiny fictional
+Meridian site — but presentation must remain downstream of the functioning,
+reproducible classifier/evaluator.
