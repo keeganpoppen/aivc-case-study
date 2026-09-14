@@ -1,265 +1,243 @@
-# Meridian v0 specification
+# Meridian intake-triage system specification
 
-This document records the assumptions and system contract behind the intake-triage
-prototype. The fictional firm exists because the exercise intentionally omits the
-business taxonomy and routing policy that would normally be learned from the client.
-Those assumptions are configuration, not hidden prompt lore.
+This document defines the fictional business assumptions and the implemented system contract behind the prototype. It is the detailed companion to the [two-page case study](CASE_STUDY.pdf); evaluation methodology lives in [EVALUATION.md](EVALUATION.md).
 
-## 1. Problem
+## 1. Purpose
 
-Meridian Advisory receives an inbound enquiry with four submitted fields:
+Meridian Advisory receives inbound enquiries containing four submitted fields:
 
-- free-text description,
-- industry,
-- company size,
+- free-text description;
+- industry;
+- company size;
 - urgency.
 
-The existing manual step assigns a service line, estimates engagement complexity
-(simple / moderate / complex), and routes the enquiry to a team lead. The prototype
-replaces that triage step where it can do so safely and explicitly abstains where it
-cannot.
+The existing manual step identifies the kind of work requested, estimates engagement complexity, and routes the enquiry to a team lead. The prototype automates that step where the submitted information supports a safe decision and otherwise routes the case to human review.
 
-The brief gives a volume of 40–60 enquiries per week and roughly eight analyst-hours
-of manual triage. At a midpoint of 50 enquiries/week, that implies 9.6 analyst-minutes
-per enquiry. That number is useful as an operating baseline, not as proof that labor
-savings are the only or largest source of business value.
+At the brief's midpoint volume, 50 enquiries/week and eight analyst-hours imply **9.6 analyst-minutes per enquiry**. That is an operating baseline, not an assumption that labor savings are the only source of value; response speed, routing quality, enrichment, and downstream conversion may matter more in production.
 
-## 2. Design thesis
+## 2. System boundary
 
-This is intentionally **not an agentic workflow**.
+The implemented flow is intentionally small:
 
 ```text
-validated intake
-    -> one structured semantic assessment
-    -> validated assessment
-    -> deterministic routing policy
-    -> team lead or human review
+submitted enquiry
+    │
+    ▼
+AI assessment
+summary · service line · complexity · disposition · review evidence
+    │
+    ▼
+validated assessment
+    │
+    ▼
+Meridian routing policy
+practice ownership · seniority · urgency / response target
+    ├──────────────► practice lead
+    └──────────────► Central Intake Review
 ```
 
-The model answers **what is this enquiry?** Ordinary code answers **what should
-Meridian do with an enquiry like this?**
+The AI interprets the enquiry. Ordinary code applies organizational workflow rules.
 
-That separation is useful only because it is observable:
+That separation keeps business changes explicit:
 
-- changing taxonomy / scope can change classification;
-- changing team ownership can reroute an unchanged saved assessment without a model call;
-- changing economic assumptions can change the reported value without changing either.
+- practice scope and complexity guidance live in the taxonomy configuration;
+- lead ownership and escalation live in routing configuration;
+- economic assumptions live in evaluation configuration;
+- model selection lives in model configuration.
 
-The implementation should remain small enough that these boundaries are obvious.
+Changing a person's routing assignment does not require reinterpreting the enquiry. Changing economic assumptions does not change classification or routing.
 
-## 3. Meridian operating model
+## 3. Meridian Advisory
 
-The formal configuration is split by reason-for-change:
+Meridian is a fictional generalist professional-services firm created to make the assignment's organizational decisions concrete.
 
-- `config/firm.yaml` — firm identity, submitted fields, company-size bands, and metadata semantics;
-- `config/taxonomy.yaml` — service-line scope, boundaries, eligibility, and global + practice-specific complexity guidance;
-- `config/routing.yaml` — lead ownership, escalation, review queue, and urgency/SLA policy;
-- `config/economics.yaml` — manual baseline and sensitivity assumptions used by evaluation.
+### Practices
 
-### Service lines
-
-Meridian is a fictional generalist consultancy with six practices:
-
-| Service line | Primary ownership boundary |
+| Practice | Primary ownership boundary |
 | --- | --- |
-| Strategy & Transformation | Growth, operating models, transformation roadmaps, organizational change; deciding what/how to transform. |
-| Operations & Process | Workflow redesign, service operations, supply chain, operational efficiency; the business process is primary. |
-| Data & AI | Analytics, AI/ML, data strategy/governance/platforms; data or model capability is primary. |
-| Technology & Systems | ERP/CRM, cloud, integrations, migrations, applications; software/system delivery is primary. |
-| Risk & Compliance | Cybersecurity, privacy, controls, regulatory readiness, risk governance; assurance/control outcome is primary. |
-| Finance & Transactions | FP&A, financial modeling, diligence, valuation, transaction support; finance/transaction outcome is primary. |
+| **Strategy & Transformation** | Growth and market strategy, operating models, transformation roadmaps, organizational change; deciding what or how the organization should transform |
+| **Operations & Process** | Workflow redesign, service operations, supply chain, operational efficiency; the business process is the primary object of change |
+| **Data & AI** | Analytics, AI/ML systems, data strategy/governance/platforms; data or model capability is the primary deliverable |
+| **Technology & Systems** | ERP/CRM, applications, cloud/infrastructure, integrations and migrations; software/system delivery is primary |
+| **Risk & Compliance** | Cybersecurity, privacy, controls, regulatory readiness and risk governance; assurance/control outcome is primary |
+| **Finance & Transactions** | FP&A, financial modeling, diligence, valuation and transaction support; finance/transaction outcome is primary |
 
-These practices intentionally overlap. Ownership follows the client's **requested
-outcome**, not keywords. AI can be a means inside an Operations engagement; an ERP
-can be used by Finance without making Finance the implementation owner; AI governance
-can primarily be a Risk engagement.
+The practices intentionally overlap. Ownership follows the client's requested outcome rather than keywords.
 
-### Complexity
+Examples:
 
-The global rubric is:
+- an AI extraction component inside a claims-process redesign can still be Operations & Process;
+- a predictive-maintenance model can be Data & AI even though Operations later consumes its predictions;
+- an ERP appearing in diligence does not make Finance & Transactions the implementation owner;
+- AI governance can primarily be Risk & Compliance when the requested outcome is governance, controls and regulatory readiness.
 
-- **Simple** — bounded, well-defined work with about one deliverable/workstream and few dependencies.
-- **Moderate** — meaningful discovery/customization or coordination across stakeholders, workflows, data sources, or systems while remaining reasonably bounded.
-- **Complex** — enterprise/multi-unit scope, several major systems/workstreams, substantial organizational change, material regulatory exposure, significant requirements ambiguity, transaction/integration programs, or dependencies across several functions.
+### Practice leadership
 
-Each service line also supplies domain-specific complexity evidence. For example,
-Technology treats global multi-system migration as complex; Risk treats multi-
-jurisdiction remediation as complex. These are model guidance, not a second hidden
-rules engine.
+Each practice has a default practice lead and a senior practice lead. The submitted `config/routing.yaml` is the source of truth for names and routing behavior.
 
-Company size is evidence, not a complexity label. Urgency is not complexity. A
-regulated industry is not automatically complex.
+## 4. Company size and urgency
 
-Cross-practice work has two distinct interpretations:
+Company size is submitted as a structured field and participates in routing policy. It is **evidence, not a complexity label**. A large firm can have a bounded simple engagement; a small firm can have a complex multi-system program.
 
-- if one practice clearly owns the outcome, other-practice dependencies may increase complexity;
-- if multiple practices are equally plausible primary owners, the disposition is `ambiguous` and the system abstains.
+Urgency affects priority and target response time. It does not change service ownership or engagement complexity.
 
-Eligibility / out-of-scope policy is separate from complexity. A future rule such as
-"this practice does not serve industry X" should change scope, not pretend that
-industry X is unusually complex.
+Structured metadata is treated as submitted evidence rather than automatically trusted ground truth. If free text contradicts routing-relevant metadata, the semantic contract permits an `insufficient_information` disposition while retaining other conclusions that remain supported.
 
-## 4. Semantic assessment contract
+## 5. Complexity
 
-The model returns one structured object with these semantic fields:
+The global complexity rubric is:
 
-- `summary` — concise enrichment grounded in submitted information;
-- `service_line` — configured service-line identifier or null;
+- **Simple** — bounded, well-defined work with roughly one deliverable/workstream and few dependencies.
+- **Moderate** — meaningful discovery, customization, or coordination across stakeholders, workflows, data sources, or systems while remaining reasonably bounded.
+- **Complex** — enterprise/multi-unit scope, multiple major systems/workstreams, substantial organizational change, material regulatory exposure, significant requirements ambiguity, transaction/integration programs, or dependencies across several functions.
+
+Each practice also contributes domain-specific complexity evidence in `config/taxonomy.yaml`. For example, global multi-system migration is a Technology complexity signal; multi-jurisdiction remediation is a Risk complexity signal.
+
+Cross-practice work has two distinct cases:
+
+1. **One clear primary owner.** Other-practice dependencies can increase complexity without making ownership ambiguous.
+2. **No defensible primary owner.** The assessment is `ambiguous` and the system sends the enquiry to review.
+
+Eligibility is separate from complexity. Unsupported work is `out_of_scope`; it is not made artificially complex.
+
+## 6. AI assessment contract
+
+The classifier returns one structured `TriageAssessment` with:
+
+- `summary` — concise description of the requested work grounded in the submission;
+- `service_line` — configured practice identifier or null;
 - `complexity` — `simple`, `moderate`, `complex`, or null;
 - `disposition` — `clear`, `ambiguous`, `insufficient_information`, or `out_of_scope`;
 - `alternative_service_lines` — plausible alternatives where useful;
-- `review_reasons` — explicit reasons an enquiry should not be auto-routed.
+- `review_reasons` — explicit reasons not to route automatically.
 
-There is deliberately **no model-generated numeric confidence**. The system measures
-whether the model's claim that an enquiry is safe to route is actually reliable.
+There is no model-generated numeric confidence score. The operational claim is discrete and testable: the model either says the case is clear enough to route or it does not. Evaluation then measures whether those automatic decisions are actually safe.
 
-### Disposition invariants
+### Disposition semantics
 
-- `clear` requires a primary service line and complexity.
-- `ambiguous` has no primary line, at least two plausible alternatives, and a review reason.
-- `insufficient_information` requires a review reason but may retain partial semantic conclusions that remain supported.
-- `out_of_scope` has no primary line and an explicit scope reason.
+| Disposition | Contract |
+| --- | --- |
+| `clear` | One primary `service_line` and a `complexity` are present; eligible for automatic routing |
+| `ambiguous` | No primary service line; at least two plausible alternatives; review reason present |
+| `insufficient_information` | Review reason present; supported partial semantics may remain |
+| `out_of_scope` | No primary service line; explicit scope/review reason present |
 
-Schema/API/model failures are operational fallbacks to human review rather than
-semantic dispositions.
+The structured output is validated in ordinary code after the model call.
 
-A useful edge case is contradictory metadata: a one-business-unit CRM migration
-with two ordinary integrations can remain moderate even at an enterprise-sized
-company. If the submitted size is small but prose states about 15,000 employees,
-Technology + moderate remain inferable while small would select the default lead
-and enterprise the senior lead. The assessment should preserve those semantics
-while abstaining until the routing-relevant company-size contradiction is resolved.
+A review case may retain useful semantics. In benchmark case I02, for example, Technology & Systems and moderate complexity remain inferable while contradictory company-size evidence makes the final lead assignment unsafe.
 
-## 5. Routing contract
+## 7. Routing contract
 
-Routing is ordinary deterministic code consuming the validated assessment and
-`config/routing.yaml`.
+Routing consumes the validated assessment plus submitted company size/urgency and `config/routing.yaml`.
 
 Baseline policy:
 
-1. Any review disposition goes to the central human-review queue.
-2. Otherwise, complex work goes to the service line's senior lead.
-3. Otherwise, enterprise accounts go to the service line's senior lead.
-4. Other clear work goes to the default lead.
-5. Urgency changes priority / target response time, never semantic ownership.
+1. Any semantic review disposition goes to `Central Intake Review`.
+2. Otherwise, complex work goes to the practice's senior lead.
+3. Otherwise, an enterprise account goes to the practice's senior lead.
+4. Other clear work goes to the default practice lead.
+5. Urgency changes priority and target response time, never semantic ownership.
 
-Expected route is **not** hard-coded into benchmark answer keys. It is derived from
-the frozen expected semantic assessment plus the current routing config. This lets
-organizational policy change without invalidating the semantic benchmark.
+The rule that fired is returned with the routing result for inspection.
 
-## 6. Evaluation contract
+Expected benchmark routes are derived from expected semantics plus the current routing configuration rather than duplicated as fixed answers. This keeps semantic evaluation stable when organizational ownership changes.
 
-`EVALUATION.md` defines the scoring semantics. `eval/latent_cases.yaml` freezes the
-30 latent cases and answer keys before classifier implementation.
+## 8. Operational failure behavior
 
-The benchmark is deliberately stress-weighted:
+Runtime/model failures are separate from semantic dispositions.
 
-| Cohort | Count |
-| --- | ---: |
-| Straightforward: one simple/moderate/complex case per practice | 18 |
-| Hard but routeable practice-boundary cases | 6 |
-| Genuinely ambiguous | 3 |
-| Insufficient / contradictory | 2 |
-| Out of scope | 1 |
+The following conditions fall back to human review rather than inventing a semantic answer:
 
-Natural-language descriptions are generated from **form + latent seed only**. The
-renderer never sees expected labels or rationale. Generated wording is reviewed for
-fidelity and then frozen before classifier tuning.
+- missing API configuration;
+- timeout or connection error;
+- API status error;
+- refusal;
+- incomplete response;
+- missing structured output;
+- structured output that violates semantic invariants;
+- SDK/client failure.
 
-Headline evaluation emphasizes selective automation:
+The fallback destination is the existing human intake path. A failure therefore degrades to the workflow being automated rather than producing an unsupported route.
 
-- automation coverage,
-- selective route accuracy,
-- unsafe automation rate,
-- review recall,
-- unnecessary review rate,
-- service-line accuracy,
-- complexity accuracy.
+Client text is treated as data to classify. A client's request to be “routed directly to the managing partner,” for example, does not override Meridian's routing policy.
 
-Summary prose, review reasons, and alternative lines are schema-validated and
-inspected qualitatively rather than scored by a second LLM pretending to be a ruler.
+## 9. Runtime and model configuration
 
-### Economic sensitivity
+The classifier uses the OpenAI Responses API and Pydantic-validated structured output.
 
-The stress-weighted benchmark must not be mistaken for a production case-frequency
-sample. Economics are therefore a separate configurable sensitivity calculation.
+Submitted defaults in `config/models.yaml`:
 
-For `N` cases, `R` human reviews, `W` wrong automatic routes, manual minutes `m`,
-review multiple `r`, and misroute multiple `k`:
+```yaml
+classification:
+  model: gpt-5.6-terra
+  reasoning_effort: low
 
-```text
-manual_cost = N * m
-system_cost = (R * r * m) + (W * k * m)
+synthetic_rendering:
+  model: gpt-5.6-luna
+  reasoning_effort: low
 ```
 
-The evaluator reports several `k` assumptions and, when possible, the break-even
-misroute penalty. It explicitly does **not** call this production ROI. Real ROI would
-need observed case mix, review time, API cost, downstream misroute cost, and ideally
-response-time / conversion outcomes.
+Requests are stateless for this workflow and response storage is disabled in configuration.
 
-## 7. Model/runtime choice
+The synthetic renderer is intentionally separate from classification. Its task is only to turn already-authored fictional client scenarios into realistic enquiry wording; it does not receive benchmark answer keys, rationales, taxonomy, routing leads, or classifier output.
 
-The runtime classifier should use the ordinary OpenAI Responses API with Structured
-Outputs validated into Pydantic models. The model ID and reasoning effort are
-configuration, not business logic. Requests should be stateless for this use case;
-no conversation/thread is required, and response storage should be disabled where
-supported.
+API credentials are supplied through the environment and are never committed. API-backed entry points load an ignored project-root `.env` when present while preserving already-exported environment values.
 
-Do **not** use Codex SDK as the production inference harness. Codex SDK is designed to
-control local coding agents; using an agent runtime for one structured semantic
-classification would add lifecycle/state/filesystem machinery that this problem does
-not need and would weaken the design thesis above.
+## 10. Configuration
 
-Likewise, an additional agent framework such as PydanticAI is optional rather than
-necessary. The default implementation should prefer the official OpenAI SDK +
-Pydantic because the problem needs one structured call, not orchestration. Add an
-abstraction only if it earns its place through observed requirements.
+The formal business/model configuration is split by reason for change:
 
-The API credential is supplied through the environment and never committed.
-API-backed commands and the local workbench load the selected project root’s
-ignored `.env` file at startup, preserving any already-exported environment values.
+```text
+config/firm.yaml       firm identity, submitted fields, company-size bands, metadata semantics
+config/taxonomy.yaml   practice ownership boundaries, eligibility, global/domain complexity guidance
+config/routing.yaml    default/senior leads, escalation, review queue, urgency / SLA
+config/economics.yaml  manual baseline and misroute-cost sensitivity assumptions
+config/models.yaml     provider, model IDs, reasoning effort, response-storage setting
+```
 
-## 8. Build sequence
+The website's firm/practice/people presentation is derived from this configuration rather than maintaining a second independent representation of Meridian.
 
-1. **Done:** define evaluation semantics and latent answer key before classifier work.
-2. Render realistic enquiry descriptions from latent facts without exposing answer keys.
-3. Review/freeze rendered cases; validate schemas and case counts.
-4. Implement input models, semantic classifier, output invariants, and deterministic router.
-5. Run the frozen benchmark and preserve raw results.
-6. Inspect errors and make only evidence-driven classifier/prompt changes.
-7. Add evaluator-facing result tables, error analysis, architecture/fallback notes, and reproducible run commands to README.
-8. Optional only after the core deliverable is sound: tiny presentation/demo surface.
+## 11. Evaluation relationship
 
-## 9. Explicit non-goals for v0
+The classifier is evaluated against 30 synthetic enquiries whose underlying scenarios and intended answers were defined before classifier implementation.
 
-No agent framework, vector database, RAG system, workflow engine, live CRM write,
-production queue, elaborate synthetic-data factory, or browser UI is on the critical
-path. A small CLI is sufficient.
+The benchmark deliberately includes routine work, hard but routeable boundaries, genuine ambiguity, insufficient/contradictory information, and out-of-scope work. A separate renderer generated realistic free text without seeing the intended answers.
 
-A later demo may expose the formal configuration visually — even via a tiny fictional
-Meridian site — but presentation must remain downstream of the functioning,
-reproducible classifier/evaluator.
+Headline metrics distinguish useful automation from unsafe over-automation:
 
-## 10. Local inspection workbench
+- automation coverage;
+- selective route accuracy;
+- unsafe automation rate;
+- review recall;
+- unnecessary review rate;
+- service-line accuracy;
+- complexity accuracy.
 
-The Phase 3 demo is a localhost-only Meridian site with an intake page backed by
-the existing triage and scoring functions. It supports the four submitted fields,
-read-only frozen-case browsing, explicit live triage, and an automatic post-run benchmark comparison.
-Editing a loaded case makes it ad-hoc and removes comparison eligibility. Expected
-routes continue to be derived mechanically from frozen semantics and routing policy.
+`EVALUATION.md` is the source of truth for exact denominators, first-run interpretation, and economic sensitivity. `eval/results/initial.json` preserves the submitted historical run.
 
-An independent ephemeral generator uses the configured synthetic-rendering model
-and company-size / urgency choices to populate the form from a scenario idea. It
-receives no benchmark data, taxonomy, routing leads, classifier output, or evaluation
-results. Generation never creates an answer key or automatically runs triage.
+## 12. Inspection surfaces
 
-The workbench has no persistence, authentication, or frontend build system. It does
-not change classifier instructions, model settings, business configuration, frozen
-cases, or evaluation evidence. Its optional frozen metric summary is read-only;
-live results are distinguished from the initial untuned evaluation.
+### CLI
 
-The homepage, practice pages, and people pages are thin views over firm, taxonomy,
-and routing configuration. The workbench lives at `/workbench`; result links lead
-to the corresponding practice or person. Presentation titles for test cases are
-kept outside the frozen benchmark. The first-pass summary displays counts from the
-preserved initial evaluation without rerunning it.
+`python -m meridian.triage` runs one live enquiry and returns the assessment, route, and call metadata as JSON.
+
+`python -m meridian.evaluate` runs the frozen benchmark and writes a new result artifact; it does not overwrite the preserved first run.
+
+### Local site
+
+`python -m meridian.workbench` serves the local Meridian site.
+
+- `/` presents the fictional firm.
+- practice and people pages are thin views over configuration.
+- `/workbench` supports manual enquiries, generated fictional examples, and live reruns of benchmark cases.
+- unchanged test cases can be compared with their authored expectation after a live call; editing a case makes it ad hoc and removes benchmark-comparison eligibility.
+- `/evaluation` is a read-only explorer for `eval/results/initial.json`, showing the preserved first pass rather than making new model calls.
+- links connect preserved evaluation cases to live workbench cases so stochastic reruns can be compared without rewriting history.
+
+The local site has no persistence or authentication. Interactive enquiries/results are not saved, and the workbench does not modify configuration, frozen cases, or evaluation evidence.
+
+## 13. Current system boundaries
+
+This prototype does not write to a CRM, own a production queue, authenticate users, or make autonomous downstream changes outside its routing result. It does not use RAG, a vector database, multi-agent orchestration, self-critique/voting, or a generated confidence score.
+
+Those are not prohibited future directions; they are simply not required by the observed problem. The production path is to learn first from real analyst decisions, overrides, reassignments, routing-relevant metadata conflicts, response times, and downstream outcomes, then add machinery only where those observations justify it.

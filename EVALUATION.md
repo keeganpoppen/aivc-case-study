@@ -1,141 +1,229 @@
-# Evaluation contract
+# Evaluation methodology
 
-This benchmark is designed to answer a narrow deployment question:
+This document defines what the synthetic benchmark tests, how its answers were established, how results are scored, and how to interpret the preserved first run.
 
-> **When is automated routing safe enough to replace the manual triage step, and when should the system abstain?**
+The central deployment question is:
 
-It is intentionally defined **before** classifier implementation. The cases are
-stress-weighted to exercise service boundaries and abstention behavior; their
-frequency is not intended to represent Meridian's production case mix.
+> **When is an enquiry safe to route automatically, and when should the system hand it to a human?**
 
-## What is frozen before classifier work
+The benchmark is deliberately stress-weighted toward boundaries and review cases. It is useful for comparing system behavior against known scenarios; it is **not** an estimate of Meridian's production case mix or production reliability.
 
-Each case is authored in two layers:
+## Preserved first run
 
-1. **Latent facts** — the underlying client situation, metadata, requested outcome,
-   and rendering style.
-2. **Expected semantics** — disposition, primary service line when one exists, and
-   complexity when it can reasonably be inferred.
+The first classifier implementation was run once against the frozen 30-case benchmark before any tuning against its results.
 
-Natural-language enquiry text is rendered from the latent facts only. The renderer
-must not receive the expected labels or rationale. Rendered text is reviewed once
-to ensure that it still supports the authored answer key, then frozen before the
-classifier is tuned.
+| Metric | First run |
+| --- | ---: |
+| Automation coverage | **27 / 30 (90.0%)** |
+| Selective route accuracy | **24 / 27 (88.9%)** |
+| Unsafe automation rate | **3 / 30 (10.0%)** |
+| Review recall | **3 / 6 (50.0%)** |
+| Unnecessary review rate | **0 / 24 (0.0%)** |
+| Service-line accuracy | **25 / 25 (100%)** |
+| Complexity accuracy | **26 / 28 (92.9%)** |
 
-The classifier therefore does not get to define its own test.
+The result is preserved at [`eval/results/initial.json`](eval/results/initial.json), including case-level predictions, expected semantics and routes, model metadata, timing/token usage, and provenance hashes.
+
+The important pattern is that the system understood the requested work well but was too willing to route several cases that should have gone to review.
+
+## Benchmark construction
+
+The benchmark starts from authored client scenarios rather than from classifier output.
+
+For each case:
+
+1. Define the underlying client situation, form metadata, requested outcome, and intended semantic answer.
+2. Give only the client situation and rendering guidance to a separate synthetic-writing model.
+3. Generate realistic client-facing enquiry text without exposing the intended classification, rationale, or route.
+4. Review the rendered wording once for fidelity to the authored scenario.
+5. Freeze the resulting form input before classifier implementation/evaluation.
+
+The synthetic renderer is configured separately from the classifier (`gpt-5.6-luna`, low reasoning effort in the submitted configuration). The classifier uses `gpt-5.6-terra` at low reasoning effort. Model IDs are configuration rather than benchmark semantics.
+
+Two files preserve the construction:
+
+- `eval/latent_cases.yaml` — authored scenario definitions, generation guidance, intended semantics, and rationale;
+- `eval/cases.yaml` — the rendered, frozen enquiries used by the evaluator.
+
+This separation prevents the classifier from defining its own test and prevents the renderer from generating prose toward the desired label.
+
+## Benchmark composition
+
+The 30 cases intentionally overrepresent situations that are likely to expose shortcut behavior.
+
+| Cohort | Count | What it tests |
+| --- | ---: | --- |
+| Routine | 18 | One simple, moderate, and complex case for each of six service lines |
+| Hard but routeable | 6 | Adjacent-practice vocabulary with one defensible primary owner |
+| Ambiguous | 3 | Multiple plausible primary owners; human review expected |
+| Insufficient / contradictory | 2 | Missing or conflicting routing-relevant information |
+| Out of scope | 1 | Request is understood but not offered by Meridian |
+
+The set includes, among other things:
+
+- large-company work that is still simple;
+- small-company work that is genuinely complex;
+- regulated work that is still simple;
+- urgent work whose urgency does not change complexity;
+- an AI-enabled engagement owned by Operations rather than Data & AI;
+- a systems request inside transaction diligence;
+- cross-practice programs with no defensible single owner;
+- conflicting company-size information between the form and free text;
+- clearly unsupported creative/marketing work.
+
+The purpose is not realism of frequency. The purpose is to make obvious heuristics fail.
+
+## Expected semantic answer
+
+The evaluator distinguishes the semantic assessment from the organizational routing decision.
+
+The authored semantic fields are:
+
+- `service_line` — primary Meridian practice where one is defensible;
+- `complexity` — `simple`, `moderate`, or `complex` where inferable;
+- `disposition` — whether the enquiry is safe to route automatically;
+- `alternative_service_lines` — plausible alternatives for ambiguous cases;
+- `review_reasons` — why human review is required.
+
+Expected final routing is derived from those semantics plus the current `config/routing.yaml`; it is not hard-coded separately into the case answer key. That allows organizational ownership rules to change without rewriting what the enquiry means.
 
 ## Dispositions
 
-The model may return one of four semantic dispositions:
+| Disposition | Meaning | Routing behavior |
+| --- | --- | --- |
+| `clear` | One defensible primary practice and enough information to estimate complexity | Eligible for automatic routing |
+| `ambiguous` | Two or more practices are genuinely plausible primary owners | Human review |
+| `insufficient_information` | Missing or contradictory information makes automatic routing unsafe | Human review |
+| `out_of_scope` | The request is understood but Meridian does not offer the work | Human review |
 
-- **`clear`** — there is a defensible primary service line and enough information
-  to estimate complexity.
-- **`ambiguous`** — two or more service lines are genuinely plausible primary
-  owners and the enquiry does not establish which outcome is primary.
-- **`insufficient_information`** — important information is missing or internally
-  contradictory, so automatic routing would be unsafe.
-- **`out_of_scope`** — the request is understood, but Meridian does not offer the
-  requested work under the configured taxonomy / eligibility policy.
+The last three all route to review in this prototype, but they remain distinct because a real intake process would follow up differently in each case.
 
-The last three dispositions all go to human review in v0, but they are deliberately
-kept distinct because they imply different real-world follow-up actions.
+A review disposition does not erase conclusions that remain supported. I02, for example, can still be Technology & Systems and moderate even though contradictory company-size information makes the final lead assignment unsafe.
 
-A review case may still contain inferable semantics. For example, contradictory
-company-size metadata can make routing unsafe even when the requested service line
-and engagement complexity are clear.
+## Validated output invariants
 
-## Output invariants
+These relationships are enforced in code after structured model output:
 
-These are validated in ordinary code rather than left solely to prompting:
-
-| Disposition | Required semantic state |
+| Disposition | Required state |
 | --- | --- |
-| `clear` | `service_line` and `complexity` are present. |
-| `ambiguous` | No primary `service_line`; at least two plausible alternatives; a review reason is present. |
-| `insufficient_information` | A review reason is present; partial service-line or complexity conclusions are allowed when supported. |
-| `out_of_scope` | No primary `service_line`; a review reason is present. |
+| `clear` | `service_line` and `complexity` are present |
+| `ambiguous` | no primary `service_line`; at least two alternatives; review reason present |
+| `insufficient_information` | review reason present; supported partial semantics may remain |
+| `out_of_scope` | no primary `service_line`; scope/review reason present |
 
-Model/schema/API failures are operational fallbacks to human review; they are not
-semantic dispositions that the model is asked to invent.
+API errors, refusals, incomplete/invalid structured output, and other runtime failures are operational fallbacks to human review. They are not semantic dispositions the model is asked to invent.
 
-## Scored metrics
+## Headline metrics
 
-The headline metrics are deliberately about the automation boundary rather than a
-single undifferentiated accuracy number.
+The benchmark emphasizes selective automation rather than a single accuracy number. Routing nothing is safe but useless; routing everything can be efficient but unsafe.
 
 ### Automation coverage
 
-`automatic routes / all cases`
+```text
+automatic routes / all cases
+```
 
-How much of the manual step the system actually replaces.
+How much of the manual triage step the system attempts to replace.
 
 ### Selective route accuracy
 
-`correct automatic routes / automatic routes`
+```text
+correct automatic routes / automatic routes
+```
 
-A route is correct only when the case is safe to automate **and** the final lead
-matches the route implied by the frozen semantic answer key plus the current routing
-configuration. Automatically routing a case that should be reviewed is incorrect,
-even if the selected service line happens to be plausible.
+An automatic route is correct only if:
+
+1. the case is expected to be safe to automate; and
+2. the resulting lead matches the lead mechanically implied by the authored semantics plus the current routing policy.
+
+Automatically routing a case that should be reviewed is therefore incorrect even when the selected practice is individually plausible.
 
 ### Unsafe automation rate
 
-`incorrect automatic routes / all cases`
+```text
+incorrect automatic routes / all cases
+```
 
-This makes the cost of overconfidence visible without hiding it inside coverage.
+Makes over-automation visible rather than hiding it inside overall accuracy.
 
 ### Review recall
 
-`correctly reviewed cases / cases whose expected disposition requires review`
+```text
+correctly reviewed cases / cases expected to require review
+```
 
-Measures whether the system catches cases where automation is unsafe.
+Measures whether the system catches cases where automatic routing is unsafe.
 
 ### Unnecessary review rate
 
-`clear cases sent to review / clear cases`
+```text
+clear cases sent to review / clear cases
+```
 
-Measures whether safety comes from simply punting difficult-but-routeable work back
-to humans.
+Measures whether review recall is being purchased simply by sending ordinary routeable work back to humans.
 
 ### Service-line accuracy
 
-`correct primary service line / cases with an authored primary service line`
+```text
+correct primary service line / cases with an authored primary service line
+```
 
-This includes review cases where a primary line is still inferable. Cases whose
-answer key intentionally has no primary line are excluded from the denominator.
+Cases intentionally authored without a primary owner are excluded. Review cases remain in the denominator when a primary practice is still inferable.
 
 ### Complexity accuracy
 
-`correct complexity / cases with an authored complexity label`
+```text
+correct complexity / cases with an authored complexity label
+```
 
-Cases where complexity cannot reasonably be inferred are excluded from the
-denominator.
+Cases where complexity cannot reasonably be inferred are excluded.
 
-For any metric with a zero denominator, the evaluator reports `n/a` rather than
-manufacturing a percentage.
+Any metric with a zero denominator is reported as `n/a`.
 
-## What is intentionally not auto-scored
+## What is not auto-scored
 
-`summary`, `review_reasons`, and `alternative_service_lines` are schema-validated
-and inspected qualitatively, but v0 does not ask a second LLM to manufacture a
-numeric quality score for them. The core decision can be evaluated directly.
+`summary`, `review_reasons`, and `alternative_service_lines` are structured and inspected qualitatively, but the prototype does not ask another language model to invent a numeric quality score for them.
 
-## Economic sensitivity, not ROI theater
+The directly observable operational decision is more important: did the system route a case that should have been routed, send an unsafe case to review, and choose the correct destination when it acted?
 
-The brief gives a real manual baseline: 40–60 enquiries per week consume roughly
-8 analyst-hours. At the midpoint of 50 enquiries/week:
+## Interpreting the first run
 
-`m = 8 * 60 / 50 = 9.6 analyst-minutes per enquiry`
+Five cases contain scored semantic or routing mismatches, but they are not equally serious.
+
+### Unsafe automatic routes
+
+- **A01 — claims modernization:** expected review because no single practice was established as the clear owner; the system automatically selected Strategy & Transformation.
+- **A02 — post-acquisition integration:** expected review for an integrated program spanning operating model, ERP, finance integration, and synergy capture; the system automatically selected Finance & Transactions.
+- **I02 — conflicting company size:** Technology & Systems and moderate complexity were correctly inferred, but the system failed to treat the contradiction between a `1–99 employees` form value and prose describing roughly 15,000 employees as routing-relevant. The two sizes select different leads.
+
+A01 and A02 expose both model behavior and an organizational-policy question: in a real implementation, ownership of integrated cross-practice programs should be learned from the firm rather than inferred from the synthetic taxonomy.
+
+I02 is the cleaner automation-boundary failure: the work was understood, but conflicting evidence should have forced review before the workflow acted on it.
+
+### Semantic mismatches without a wrong route
+
+- **H02:** expected `moderate`, predicted `complex`; both map to the same senior Operations lead because the client is enterprise-sized.
+- **A03:** ambiguity/review was correctly identified, but complexity was left unset where the answer key expected `complex`.
+
+These matter for semantic quality without creating the same downstream risk as an unsafe automatic assignment.
+
+## Economic sensitivity
+
+The brief supplies a useful manual baseline: 40–60 enquiries per week consume about eight analyst-hours. At the midpoint of 50 enquiries:
+
+```text
+m = 8 * 60 / 50 = 9.6 analyst-minutes per enquiry
+```
 
 Let:
 
-- `N` = number of evaluated cases
-- `R` = cases sent to human review
-- `W` = incorrectly auto-routed cases
-- `r` = review cost as a multiple of the original manual triage cost (default 1.0)
-- `k` = cost of a misroute as a multiple of the original manual triage cost
+- `N` = evaluated cases;
+- `R` = cases sent to human review;
+- `W` = incorrectly auto-routed cases;
+- `r` = review cost as a multiple of one manual triage (default `1.0`);
+- `k` = downstream cost of a wrong automatic route, also expressed as a multiple of manual triage.
 
-Then the deliberately simple sensitivity model is:
+The simple sensitivity model is:
 
 ```text
 manual_cost = N * m
@@ -143,59 +231,41 @@ system_cost = (R * r * m) + (W * k * m)
 estimated_savings = manual_cost - system_cost
 ```
 
-Equivalently, normalized by the manual baseline:
+Normalized by the manual baseline:
 
 ```text
 system_cost / manual_cost = (R*r + W*k) / N
 ```
 
-When `W > 0`, the break-even misroute multiple is:
+When `W > 0`, the break-even wrong-route multiple is:
 
 ```text
 k* = (N - R*r) / W
 ```
 
-The evaluator reports several configurable `k` values rather than pretending the
-business cost of a misroute is known. A default `r = 1.0` is conservative: it
-assumes an abstained case still consumes the full original manual triage effort,
-even though the model may already have produced useful enrichment.
+For the preserved first run (`N=30`, `R=3`, `W=3`, `r=1`):
 
-**This is not a production ROI estimate.** The benchmark deliberately oversamples
-hard and review-worthy cases. Production economics require observed case mix,
-actual review time, model usage, downstream misroute cost, and ideally conversion /
-response-time outcomes. The purpose here is to expose the operating trade-off and
-show exactly which assumptions would need to be replaced with measured data.
+| Assumed wrong-route cost | Modeled system cost vs. manual |
+| --- | ---: |
+| 1× manual triage | 20% |
+| 3× manual triage | 40% |
+| 10× manual triage | 110% |
 
-## Benchmark composition
+The break-even value is **9×** one manual triage.
 
-The frozen latent benchmark contains 30 cases:
+This is **sensitivity analysis, not a production ROI forecast**. The benchmark deliberately oversamples hard/review cases, and the cost multiple is an assumption. Production economics require observed case mix, actual review time, inference cost, downstream reassignment cost, and ideally response-time and conversion outcomes.
 
-| Cohort | Count | Purpose |
-| --- | ---: | --- |
-| Straightforward | 18 | One simple, moderate, and complex case for each of six service lines. |
-| Hard but routeable | 6 | Overlapping vocabulary / adjacent practices with one defensible primary owner. |
-| Ambiguous | 3 | Multiple plausible primary owners; human review expected. |
-| Insufficient / contradictory | 2 | Missing or contradictory routing-relevant information. |
-| Out of scope | 1 | Request is understood but not offered by Meridian. |
+## Reproduction and provenance
 
-The set deliberately includes large-but-simple, small-but-complex, regulated-but-
-simple, urgent-but-simple, AI-mentioned-but-not-Data-&-AI, and metadata-conflict
-cases so that obvious shortcuts fail.
+The committed historical result is never overwritten. To run the frozen inputs again:
 
-## How results should be shown to an evaluator
+```sh
+uv run python -m meridian.evaluate \
+  --output eval/results/reproduction.json
+```
 
-The README should lead with a compact result table containing:
+The evaluator builds model requests from the four submitted intake fields and configuration; benchmark labels/rationales are not included in classifier input. Predictions are written before scoring against expected semantics.
 
-1. automation coverage,
-2. selective route accuracy,
-3. unsafe automation rate,
-4. review recall,
-5. service-line and complexity accuracy.
+The preserved run used `gpt-5.6-terra` with low reasoning effort. All 30 calls completed without operational fallback. Observed totals were **74,907 input tokens**, **2,109 output tokens**, **1.74 s mean call latency**, and **2.585 s maximum call latency**.
 
-Immediately below it, show a small misroute-cost sensitivity table and a short
-error analysis with concrete failed cases. Do not bury errors, and do not imply that
-a stress-weighted synthetic benchmark predicts production frequency.
-
-The live demo should make the configuration boundaries visible: taxonomy changes
-can change classification; routing changes can reroute an unchanged assessment;
-economic assumptions can change the reported value without changing either.
+A new run may differ because model outputs are stochastic. `eval/results/initial.json` is the submitted historical evidence; a reproduction is a new experiment, not a replacement for it.
