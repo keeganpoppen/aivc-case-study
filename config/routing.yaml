@@ -1,0 +1,48 @@
+version: 1
+
+review:
+  queue: Central Intake Review
+  priority: high
+
+policy:
+  enterprise_company_size: enterprise
+  complex_to_senior_lead: true
+  enterprise_to_senior_lead: true
+  review_dispositions:
+    - ambiguous
+    - insufficient_information
+    - out_of_scope
+
+priority:
+  normal:
+    level: normal
+    target_response: 1 business day
+  urgent:
+    level: high
+    target_response: 2 business hours
+
+service_lines:
+  strategy_transformation:
+    default_lead: Elena Park
+    senior_lead: Marcus Reed
+  operations_process:
+    default_lead: Priya Nair
+    senior_lead: Jonah Bennett
+  data_ai:
+    default_lead: Mina Chen
+    senior_lead: Devon Okafor
+  technology_systems:
+    default_lead: Alex Romero
+    senior_lead: Sofia Laurent
+  risk_compliance:
+    default_lead: Nadia Brooks
+    senior_lead: Isaac Feldman
+  finance_transactions:
+    default_lead: Claire Morgan
+    senior_lead: Daniel Cho
+
+notes:
+  - Routing consumes a validated semantic assessment; the model never chooses a person's name.
+  - Review takes precedence over all lead-assignment rules.
+  - Urgency changes priority / SLA but never semantic ownership.
+  - Changing this file can reroute a saved assessment without a new model invocation.
